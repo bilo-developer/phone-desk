@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/bilo-developer/phone-desk/main/assets/app_icon.ico" width="100" />
-  <h1>📱 Phone Desk</h1>
+  <h1>Phone Desk</h1>
   <p><strong>Bilgisayarınızı Telefonunuzdan Canlı ve Kesintisiz Yönetin!</strong></p>
 </div>
 
@@ -12,13 +12,13 @@
 
 ## 🌟 Öne Çıkan Özellikler
 
-### 🎮 Canlı Ekran Kontrolü (Sıfır Gecikme!)
+### 🎮 Canlı Ekran Kontrolü
 Bilgisayar ekranınızı **gerçek zamanlı (MJPEG Stream)** mimarisiyle telefonunuzdan canlı izleyin. 
 - **Akıcılık (FPS) Seçenekleri:** İnternet ağınızın durumuna göre 15, 30, 45 veya 60 FPS hızlarında izleyebilirsiniz.
 - **Dinamik Çözünürlük (Kalite):** Gecikmeyi tamamen sıfırlamak için 480p, mükemmel netlik için 1080p gibi çözünürlük modları arasında anında geçiş yapabilirsiniz.
 - **Tam Ekran (Fullscreen) Desteği:** Telefonunuzu yatay (landscape) moda alarak cihazınızın tüm ekranını kullanarak bilgisayarınızı yönetin.
 
-### 🖱️ Touchpad (Dokunmatik Fare ve Klavye)
+### 🖱️ Touchpad 
 Telefonunuzun ekranını tıpkı bir dizüstü bilgisayar touchpad'i gibi kullanın. Sağ tık, sol tık ve metin gönderme işlemlerini tek dokunuşla halledin.
 
 ### 📂 Dosya Yöneticisi
@@ -46,8 +46,3 @@ Uygulama arka planda (Sistem tepsisinde) çalışır ve açılırken size özel 
 
 ---
 
-## 🛠️ Geliştirici ve Mimari Notları
-
-- **Frontend:** Pure HTML/CSS (Vanilla Javascript), Tailwind ile harmanlanmış ultra-modern, karanlık mod (dark theme) destekli duyarlı web arayüzü.
-- **Backend (API):** Dart ve Flutter çekirdeği ile yazılmış multithread destekli yerel web sunucusu.
-- **Görüntü İşleme:** Dart FFI ve Win32 kütüphaneleri kullanılarak donanım üzerinden "BitBlt" teknolojisi ile anlık ekran yakalama ve MJPEG stream.
