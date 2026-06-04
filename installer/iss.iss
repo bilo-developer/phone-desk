@@ -2,10 +2,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 ; Non-commercial use only
 
-#define MyAppName "Phone Link"
-#define MyAppVersion "1.0"
-#define MyAppPublisher "Phone Link"
-#define MyAppURL "https://github.com"
+#define MyAppName "Phone Desk"
+#define MyAppVersion "1.0.0"
+#define MyAppPublisher "Bilo Developer"
+#define MyAppURL "https://github.com/bilo-developer/phone-desk"
 #define MyAppExeName "phone_link_app.exe"
 #define MyAppAssocName MyAppName + " File"
 #define MyAppAssocExt ".myp"
