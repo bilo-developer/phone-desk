@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
@@ -45,7 +46,7 @@ class ScreenStreamer {
 
   void log(String message) {
     final msg = '[${DateTime.now().toIso8601String()}] ScreenStreamer: $message';
-    print(msg);
+    debugPrint(msg);
     try {
       File('phone_desk_screen.log').writeAsStringSync('$msg\n', mode: FileMode.append);
     } catch (_) {}
@@ -73,7 +74,6 @@ class ScreenStreamer {
     _isEncoding = true;
 
     try {
-      final watch = Stopwatch()..start();
       
       int hwnd = GetDesktopWindow();
       int hdcScreen = GetDC(hwnd);
@@ -125,7 +125,7 @@ class ScreenStreamer {
       
       if (_latestFrame != null) {
           _frameController.add(_latestFrame!);
-          // Un-comment to trace every frame if needed: log('Frame captured & encoded. Size: ${_latestFrame!.length} bytes in ${watch.elapsedMilliseconds}ms');
+          // Un-comment to trace every frame if needed: log('Frame captured & encoded. Size: ${_latestFrame!.length} bytes');
       } else {
           log('Error: Frame encoding returned null');
       }

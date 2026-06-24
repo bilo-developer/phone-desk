@@ -99,6 +99,7 @@ const List<ActionTypeInfo> actionTypes = [
   ActionTypeInfo(type: 'folder', label: 'Klasör Aç', description: 'Bir klasörü Explorer ile aç', icon: Icons.folder_open),
   ActionTypeInfo(type: 'text', label: 'Metin Yapıştır', description: 'Bir metni yazarak yapıştır', icon: Icons.text_fields),
   ActionTypeInfo(type: 'url', label: 'URL Aç', description: 'Bir web sayfası aç', icon: Icons.link),
+  ActionTypeInfo(type: 'movie_mode', label: 'Film Modu', description: 'Netflix aç ve diğer ekranı karart', icon: Icons.movie),
 ];
 
 /// Available icon names for buttons
@@ -113,7 +114,7 @@ const List<String> availableIcons = [
   'shopping_cart', 'favorite', 'star', 'bookmark', 'flag',
   'home', 'search', 'add', 'remove', 'delete',
   'save', 'share', 'download', 'upload', 'cloud',
-  'discord', 'monitor', 'desktop_windows', 'web', 'refresh',
+  'discord', 'monitor', 'desktop_windows', 'web', 'refresh', 'movie',
 ];
 
 /// Available gradient colors for buttons
@@ -194,6 +195,17 @@ class DeckManager {
         if (!generalProfile.buttons.any((b) => b.id == 'btn_shutdown')) {
           generalProfile.buttons.add(
             DeckButton(id: 'btn_shutdown', label: 'PC Kapat', iconName: 'power_settings_new', color: 'EF4444', actionType: 'command', actionData: 'shutdown /s /t 0')
+          );
+          addedAny = true;
+        }
+      } catch (_) {}
+
+      // Inject Movie Mode button into Netflix profile if missing
+      try {
+        final netflixProfile = profiles.firstWhere((p) => p.id == 'netflix');
+        if (!netflixProfile.buttons.any((b) => b.actionType == 'movie_mode')) {
+          netflixProfile.buttons.insert(0,
+            DeckButton(id: 'btn_netflix_movie', label: 'Netflix Aç (Film Modu)', iconName: 'movie', color: 'EF4444', actionType: 'movie_mode', actionData: '0')
           );
           addedAny = true;
         }
@@ -302,6 +314,7 @@ class DeckManager {
         iconName: 'play_circle',
         color: 'E50914', // Netflix Red
         buttons: [
+          DeckButton(id: 'nf_start', label: 'Netflix Aç', iconName: 'movie', color: 'E50914', actionType: 'movie_mode', actionData: ''),
           DeckButton(id: 'nf_1', label: 'Oynat/Durdur', iconName: 'play_circle', color: 'E50914', actionType: 'hotkey', actionData: 'space'),
           DeckButton(id: 'nf_2', label: 'Tam Ekran', iconName: 'fullscreen', color: '3B82F6', actionType: 'hotkey', actionData: 'f'),
           DeckButton(id: 'nf_3', label: 'Sesi Kapat', iconName: 'volume_off', color: '64748B', actionType: 'hotkey', actionData: 'm'),
@@ -511,6 +524,7 @@ IconData getIconDataFromName(String name) {
     'pause': Icons.pause,
     'fast_forward': Icons.fast_forward,
     'fast_rewind': Icons.fast_rewind,
+    'movie': Icons.movie,
   };
   return iconMap[name] ?? Icons.touch_app;
 }

@@ -13,6 +13,7 @@ import 'deck_manager.dart';
 import 'deck_panel.dart';
 import 'web_ui.dart';
 import 'screen_streamer.dart';
+import 'package:screen_retriever/screen_retriever.dart';
 
 class PhoneLinkApp extends StatefulWidget {
   const PhoneLinkApp({super.key});
@@ -43,6 +44,8 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
   int _currentTab = 0; // 0: Dosyalar, 1: Galeri, 2: Deck
   final DeckManager _deckManager = DeckManager();
   final ScreenStreamer _screenStreamer = ScreenStreamer();
+  final List<HttpResponse> _activeStreamResponses = [];
+  List<dynamic> _netflixProfiles = [];
 
   @override
   void initState() {
@@ -50,6 +53,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
     _loadSettings();
     _initSharedFolder();
     _startServer();
+    _loadNetflixProfiles();
     _deckManager.load().then((_) { if (mounted) setState(() {}); });
     
     // Watch folder for changes to update UI
@@ -77,9 +81,32 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
     }
   }
 
-  void _saveMetadata() {
-    final file = File('$_phoneLinkDir${Platform.pathSeparator}.metadata.json');
-    file.writeAsStringSync(jsonEncode(_fileOrigins));
+  Future<void> _saveMetadata() async {
+    try {
+      final file = File('$_phoneLinkDir${Platform.pathSeparator}.metadata.json');
+      await file.writeAsString(jsonEncode(_fileOrigins));
+    } catch (e) {
+      debugPrint('Error saving metadata: $e');
+    }
+  }
+
+  Future<void> _loadNetflixProfiles() async {
+    try {
+      final file = File('netflix_profiles.json');
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        _netflixProfiles = jsonDecode(content);
+      } else {
+        _netflixProfiles = [];
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveNetflixProfiles() async {
+    try {
+      final file = File('netflix_profiles.json');
+      await file.writeAsString(jsonEncode(_netflixProfiles));
+    } catch (_) {}
   }
 
   void _loadSharedFiles() {
@@ -154,12 +181,27 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
 
       for (var interface in validInterfaces) {
         for (var addr in interface.addresses) {
-          if (addr.address.startsWith('192.168.')) {
+          if (addr.address.startsWith('192.168.') &&
+              !addr.address.startsWith('192.168.56.') &&
+              !addr.address.startsWith('192.168.137.')) {
             ip = addr.address;
             break;
           }
         }
         if (ip != null) break;
+      }
+
+      // Fallback if no clean 192.168 is found
+      if (ip == null) {
+        for (var interface in validInterfaces) {
+          for (var addr in interface.addresses) {
+            if (addr.address.startsWith('192.168.')) {
+              ip = addr.address;
+              break;
+            }
+          }
+          if (ip != null) break;
+        }
       }
 
       if (ip == null) {
@@ -486,6 +528,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           response.headers.contentType = ContentType.parse('multipart/x-mixed-replace; boundary=--myboundary');
           
           void sendFrame(Uint8List frame) {
+            if (!_activeStreamResponses.contains(response)) return;
             try {
               response.write('--myboundary\r\n');
               response.write('Content-Type: image/jpeg\r\n');
@@ -493,24 +536,43 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
               response.add(frame);
               response.write('\r\n');
             } catch (e) {
-              // Socket might be closed
+              _activeStreamResponses.remove(response);
             }
           }
           
           sendFrame(initialFrame);
           
+          _activeStreamResponses.add(response);
           final sub = _screenStreamer.frameStream.listen((frame) {
             sendFrame(frame);
           });
 
           await request.response.done.catchError((_) {}).whenComplete(() {
+            _activeStreamResponses.remove(response);
             sub.cancel();
           });
         }
         else if (request.method == 'POST' && path == '/screen/stop') {
           _screenStreamer.stop();
+          final responsesToClose = List<HttpResponse>.from(_activeStreamResponses);
+          _activeStreamResponses.clear();
+          for (var res in responsesToClose) {
+            try { res.close(); } catch(_) {}
+          }
           response.statusCode = 200;
           response.write('OK');
+          await response.close();
+        }
+        else if (request.method == 'GET' && path == '/displays') {
+          final displays = await screenRetriever.getAllDisplays();
+          final list = displays.map((d) => {
+            'name': d.name,
+            'id': d.id,
+            'width': d.size.width,
+            'height': d.size.height,
+          }).toList();
+          response.headers.contentType = ContentType.json;
+          response.write(jsonEncode(list));
           await response.close();
         }
         // Deck API endpoints
@@ -523,6 +585,23 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           final profileId = request.uri.queryParameters['profile'] ?? _deckManager.activeProfileId;
           response.headers.contentType = ContentType.json;
           response.write(_deckManager.buttonsToApiJson(profileId));
+          await response.close();
+        }
+        else if (request.method == 'GET' && path == '/netflix/profiles') {
+          response.headers.contentType = ContentType.json;
+          response.write(jsonEncode(_netflixProfiles));
+          await response.close();
+        }
+        else if (request.method == 'POST' && path == '/netflix/profiles') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            _netflixProfiles = jsonDecode(content);
+            await _saveNetflixProfiles();
+            response.statusCode = 200;
+            response.write('OK');
+          } catch(e) {
+            response.statusCode = 400;
+          }
           await response.close();
         }
         else if (request.method == 'POST' && path == '/deck/execute') {

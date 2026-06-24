@@ -227,14 +227,22 @@ tailwind.config = {
                         <button onclick="setRes(720)" id="res-720" class="res-btn px-2 py-1 rounded-md text-xs font-bold text-on-surface-variant hover:text-on-surface bg-transparent">720p</button>
                         <button onclick="setRes(1080)" id="res-1080" class="res-btn px-2 py-1 rounded-md text-xs font-bold bg-primary text-background">1080p</button>
                         <div class="w-px h-4 bg-outline-variant mx-1"></div>
+                        <button onclick="toggleStream()" id="stream-toggle-btn" class="p-1 rounded-md text-primary hover:bg-white/5 flex items-center justify-center" title="Başlat/Durdur">
+                            <span id="stream-toggle-icon" class="material-symbols-outlined text-[20px]">play_arrow</span>
+                        </button>
                         <button onclick="toggleFullscreen()" class="p-1 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-white/5 flex items-center justify-center">
                             <span class="material-symbols-outlined text-[20px]">fullscreen</span>
                         </button>
                     </div>
                 </div>
                 <div id="screen-container" class="flex-1 bg-black rounded-2xl overflow-hidden relative border-2 border-outline-variant flex items-center justify-center mb-2">
+                    <div id="stream-play-overlay" class="absolute inset-0 z-20 flex items-center justify-center cursor-pointer bg-surface/50 backdrop-blur-sm" onclick="toggleStream()">
+                        <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(208,251,255,0.4)] transition-transform hover:scale-105 active:scale-95">
+                            <span class="material-symbols-outlined text-background text-4xl ml-1">play_arrow</span>
+                        </div>
+                    </div>
                     <img id="screen-img" src="" class="w-full h-full object-contain pointer-events-none" />
-                    <div id="screen-overlay" class="absolute inset-0 z-10 w-full h-full touch-none"></div>
+                    <div id="screen-overlay" class="absolute inset-0 z-10 w-full h-full touch-none hidden"></div>
                     <button id="exit-fs-btn" onclick="toggleFullscreen()" class="hidden absolute top-4 right-4 z-50 bg-black/50 text-white rounded-full p-2 border border-white/20 backdrop-blur-md shadow-lg">
                         <span class="material-symbols-outlined">fullscreen_exit</span>
                     </button>
@@ -321,7 +329,7 @@ tailwind.config = {
 
     if (tab === 'files') loadDirectory();
     if (tab === 'deck') loadDeck();
-    if (tab === 'screen') startStream(); else stopStream();
+    if (tab !== 'screen') stopStream();
   }
 
   // --- Deck Functions ---
@@ -406,10 +414,213 @@ tailwind.config = {
 
     if (navigator.vibrate) navigator.vibrate(30);
 
+    if (btn.actionType === 'movie_mode') {
+      try {
+        await loadNetflixProfiles();
+        showNetflixFlowModal(btn);
+        return;
+      } catch(e) {
+          console.error('Netflix flow hatası', e);
+      }
+    }
+
+    await executeActionCall(btn);
+  }
+
+  let netflixProfiles = [];
+  
+  async function loadNetflixProfiles() {
+      try {
+          const res = await api('/netflix/profiles');
+          netflixProfiles = await res.json();
+      } catch(e) { netflixProfiles = []; }
+  }
+
+  function showNetflixFlowModal(btn) {
+    const modalBg = document.createElement('div');
+    modalBg.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4';
+    
+    const modalBody = document.createElement('div');
+    modalBody.className = 'bg-surface-container border border-outline-variant rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl';
+    
+    modalBg.appendChild(modalBody);
+    document.body.appendChild(modalBg);
+
+    function renderSelectView() {
+        if (!netflixProfiles.length) {
+            renderEditView();
+            return;
+        }
+
+        let html = `<div class="p-4 border-b border-outline-variant bg-surface-variant/50 flex justify-between items-center">
+            <h3 class="font-bold text-lg text-primary">Netflix Profilleri</h3>
+            <button id="nflx-edit" class="text-on-surface-variant"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+        <div class="p-4 flex flex-col gap-3">`;
+        
+        netflixProfiles.forEach((p, i) => {
+            html += `<button id="nflx-prof-${i}" class="w-full py-3 px-4 rounded-xl bg-surface border border-outline hover:border-primary focus:border-primary focus:bg-primary/10 transition-colors flex justify-between items-center text-left">
+                <span class="font-bold text-on-surface">${p.name}</span>
+                ${p.hasPin ? '<span class="material-symbols-outlined text-outline text-sm">lock</span>' : ''}
+            </button>`;
+        });
+        
+        html += `<button id="nflx-cancel" class="mt-2 w-full py-2.5 rounded-xl text-error hover:bg-error/10 font-semibold transition-colors">İptal</button></div>`;
+        modalBody.innerHTML = html;
+        
+        netflixProfiles.forEach((p, i) => {
+            document.getElementById(`nflx-prof-${i}`).onclick = () => {
+                if (p.hasPin) {
+                    renderPinView(i);
+                } else {
+                    executeNetflix(btn, i, '');
+                    modalBg.remove();
+                }
+            };
+        });
+        document.getElementById('nflx-cancel').onclick = () => modalBg.remove();
+        document.getElementById('nflx-edit').onclick = () => renderEditView();
+    }
+
+    function renderPinView(profileIndex) {
+        modalBody.innerHTML = `<div class="p-4 border-b border-outline-variant bg-surface-variant/50">
+            <h3 class="font-bold text-lg text-primary text-center">PIN Girin</h3>
+            <p class="text-xs text-on-surface-variant text-center">${netflixProfiles[profileIndex].name} için şifre</p>
+        </div>
+        <div class="p-4 flex flex-col gap-3">
+            <input type="password" inputmode="numeric" pattern="[0-9]*" id="nflx-pin" class="w-full py-3 px-4 rounded-xl bg-surface border border-outline text-center text-2xl tracking-widest text-on-surface focus:outline-none focus:border-primary" maxlength="4" autofocus>
+            <button id="nflx-pin-submit" class="w-full py-3 rounded-xl bg-primary text-background font-bold mt-2">Giriş Yap</button>
+            <button id="nflx-pin-cancel" class="w-full py-2.5 rounded-xl text-on-surface-variant hover:bg-surface transition-colors">Geri</button>
+        </div>`;
+        
+        document.getElementById('nflx-pin-submit').onclick = () => {
+            const pin = document.getElementById('nflx-pin').value;
+            executeNetflix(btn, profileIndex, pin);
+            modalBg.remove();
+        };
+        document.getElementById('nflx-pin-cancel').onclick = () => renderSelectView();
+    }
+
+    function renderEditView() {
+        let html = `<div class="p-4 border-b border-outline-variant bg-surface-variant/50">
+            <h3 class="font-bold text-lg text-primary text-center">Netflix Profillerini Ayarla</h3>
+            <p class="text-xs text-on-surface-variant text-center mt-1">Ekranda sırasıyla soldan sağa duran profillerinizi yazın.</p>
+        </div>
+        <div class="p-4 flex flex-col gap-3 max-h-[60vh] overflow-y-auto" id="nflx-edit-list"></div>
+        <div class="p-4 flex gap-2 border-t border-outline-variant">
+            <button id="nflx-edit-cancel" class="flex-1 py-2.5 rounded-xl bg-surface border border-outline text-on-surface transition-colors">İptal</button>
+            <button id="nflx-edit-save" class="flex-1 py-2.5 rounded-xl bg-primary text-background font-bold transition-colors">Kaydet</button>
+        </div>`;
+        
+        modalBody.innerHTML = html;
+        const tempProfiles = [...netflixProfiles];
+        
+        function renderItems() {
+            const list = document.getElementById('nflx-edit-list');
+            list.innerHTML = '';
+            tempProfiles.forEach((p, i) => {
+                list.innerHTML += `<div class="flex items-center gap-2 mb-2">
+                    <span class="text-xs font-bold w-4">${i+1}</span>
+                    <input type="text" id="ne-name-${i}" value="${p.name}" placeholder="Profil Adı" class="flex-1 min-w-0 bg-surface rounded border border-outline-variant px-2 py-1 text-sm text-on-surface">
+                    <label class="flex items-center gap-1 text-xs text-on-surface-variant cursor-pointer">
+                        <input type="checkbox" id="ne-pin-${i}" ${p.hasPin ? 'checked' : ''}> PIN
+                    </label>
+                    <button class="text-error" onclick="nflxRemove(${i})"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                </div>`;
+            });
+            list.innerHTML += `<button onclick="nflxAdd()" class="w-full py-2 border border-dashed border-primary text-primary rounded text-sm mt-2 font-bold">+ Yeni Profil Ekle</button>`;
+        }
+        
+        window.nflxAdd = () => {
+            syncTemp();
+            tempProfiles.push({name: '', hasPin: false});
+            renderItems();
+        };
+        
+        window.nflxRemove = (i) => {
+            syncTemp();
+            tempProfiles.splice(i, 1);
+            renderItems();
+        };
+        
+        function syncTemp() {
+            tempProfiles.forEach((p, i) => {
+                const el = document.getElementById(`ne-name-${i}`);
+                if (el) p.name = el.value;
+                const cb = document.getElementById(`ne-pin-${i}`);
+                if (cb) p.hasPin = cb.checked;
+            });
+        }
+        
+        renderItems();
+        
+        document.getElementById('nflx-edit-cancel').onclick = () => renderSelectView();
+        document.getElementById('nflx-edit-save').onclick = async () => {
+            syncTemp();
+            netflixProfiles = tempProfiles.filter(p => p.name.trim() !== '');
+            await api('/netflix/profiles', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(netflixProfiles) });
+            renderSelectView();
+        };
+    }
+
+    renderSelectView();
+  }
+
+  async function executeNetflix(btn, profileIndex, pin) {
+      try {
+        const dRes = await api('/displays');
+        const displays = await dRes.json();
+        
+        const payload = { screen: 0, profileIndex: profileIndex, pin: pin };
+        
+        if (displays.length > 1) {
+            showDisplaySelectionModal(displays, (selectedIndex) => {
+                payload.screen = selectedIndex;
+                const btnCopy = {...btn, actionData: JSON.stringify(payload)};
+                executeActionCall(btnCopy).then(() => switchTab('touchpad'));
+            });
+        } else {
+            const btnCopy = {...btn, actionData: JSON.stringify(payload)};
+            executeActionCall(btnCopy).then(() => switchTab('touchpad'));
+        }
+      } catch(e) {}
+  }
+
+  async function executeActionCall(btn) {
     try {
       const res = await api('/deck/execute', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(btn) });
       showDeckStatus(res.ok ? `${btn.label} ✓` : `${btn.label} başarısız`, res.ok);
     } catch(e) { showDeckStatus(`${btn.label} hata!`, false); }
+  }
+
+  function showDisplaySelectionModal(displays, onSelect) {
+    const modalBg = document.createElement('div');
+    modalBg.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4';
+    
+    const modalBody = document.createElement('div');
+    modalBody.className = 'bg-surface-container border border-outline-variant rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl';
+    
+    let html = `<div class="p-4 border-b border-outline-variant bg-surface-variant/50"><h3 class="font-bold text-lg text-primary text-center">Hangi Ekranda Açılsın?</h3><p class="text-xs text-on-surface-variant text-center mt-1">Netflix'in hangi ekranda açılacağını seçin. Diğer ekranlar karartılacaktır.</p></div><div class="p-4 flex flex-col gap-3">`;
+    
+    displays.forEach((d, i) => {
+        html += `<button id="disp-btn-${i}" class="w-full py-3 px-4 rounded-xl bg-surface border border-outline hover:border-primary focus:border-primary focus:bg-primary/10 transition-colors flex justify-between items-center text-left">
+            <div><div class="font-bold text-on-surface">Ekran ${i + 1}</div><div class="text-xs text-on-surface-variant">${d.width}x${d.height}</div></div>
+            <span class="material-symbols-outlined text-outline">tv</span>
+        </button>`;
+    });
+    
+    html += `<button id="disp-cancel" class="mt-2 w-full py-2.5 rounded-xl bg-transparent border border-transparent text-error hover:bg-error/10 font-semibold transition-colors">İptal</button></div>`;
+    modalBody.innerHTML = html;
+    modalBg.appendChild(modalBody);
+    document.body.appendChild(modalBg);
+    
+    displays.forEach((d, i) => {
+        document.getElementById(`disp-btn-${i}`).onclick = () => {
+            modalBg.remove();
+            onSelect(i);
+        };
+    });
+    document.getElementById('disp-cancel').onclick = () => modalBg.remove();
   }
 
   function showDeckStatus(msg, success) {
@@ -696,8 +907,25 @@ tailwind.config = {
     }
   }
 
+  function toggleStream() {
+      if (isStreaming) stopStream();
+      else startStream();
+  }
+
   function startStream() {
     isStreaming = true;
+    
+    const playOverlay = document.getElementById('stream-play-overlay');
+    if (playOverlay) {
+        playOverlay.classList.add('hidden');
+        playOverlay.classList.remove('flex');
+    }
+    const screenOverlay = document.getElementById('screen-overlay');
+    if (screenOverlay) screenOverlay.classList.remove('hidden');
+    
+    const icon = document.getElementById('stream-toggle-icon');
+    if (icon) icon.textContent = 'stop';
+    
     const img = document.getElementById('screen-img');
     // For MJPEG, we only need to set the source once! The browser handles the rest.
     img.src = '/screen/frame?fps=' + streamFps + '&res=' + streamRes + '&pwd=' + encodeURIComponent(password) + '&t=' + new Date().getTime();
@@ -711,7 +939,22 @@ tailwind.config = {
   }
 
   function stopStream() {
+    if (!isStreaming) return;
     isStreaming = false;
+    
+    const playOverlay = document.getElementById('stream-play-overlay');
+    if (playOverlay) {
+        playOverlay.classList.remove('hidden');
+        playOverlay.classList.add('flex');
+    }
+    const screenOverlay = document.getElementById('screen-overlay');
+    if (screenOverlay) screenOverlay.classList.add('hidden');
+    
+    const icon = document.getElementById('stream-toggle-icon');
+    if (icon) icon.textContent = 'play_arrow';
+
+    const img = document.getElementById('screen-img');
+    if (img) img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     api('/screen/stop', { method: 'POST' }).catch(()=>{});
   }
 

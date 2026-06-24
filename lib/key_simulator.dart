@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'dart:ffi';
 import 'package:flutter/foundation.dart';
 
@@ -34,6 +35,8 @@ class KeySimulator {
           return await typeText(actionData);
         case 'url':
           return await openUrl(actionData);
+        case 'movie_mode':
+          return await launchMovieMode(actionData);
         default:
           debugPrint('Unknown action type: $actionType');
           return false;
@@ -376,5 +379,119 @@ Start-Sleep -Milliseconds 50
       debugPrint('Open URL error: $e');
       return false;
     }
+  }
+
+  /// Launch Netflix and dim the other screen using a borderless black PowerShell form
+  Future<bool> launchMovieMode(String actionData) async {
+    int targetScreenIndex = 0;
+    int? profileIndex;
+    String? pin;
+
+    try {
+      if (actionData.startsWith('{')) {
+        final data = jsonDecode(actionData);
+        targetScreenIndex = int.tryParse(data['screen']?.toString() ?? '0') ?? 0;
+        profileIndex = int.tryParse(data['profileIndex']?.toString() ?? '');
+        pin = data['pin']?.toString();
+      } else {
+        targetScreenIndex = int.tryParse(actionData) ?? 0;
+      }
+    } catch (_) {}
+
+    // Launch Netflix directly via its Windows App AUMID to bypass broken URI schemes
+    try {
+      await Process.run('explorer.exe', ['shell:AppsFolder\\4DF9E0F8.Netflix_mcm4njqhnhss8!Netflix.App']);
+    } catch (e) {
+      debugPrint('Netflix launch error: $e');
+    }
+
+    // PowerShell script to find other screens and black them out
+    final script = '''
+Add-Type -AssemblyName System.Windows.Forms
+\$screens = [System.Windows.Forms.Screen]::AllScreens
+if (\$screens.Length -le 1) { exit 0 }
+\$targetIdx = $targetScreenIndex
+if (\$targetIdx -lt 0 -or \$targetIdx -ge \$screens.Length) { \$targetIdx = 0 }
+
+\$forms = @()
+for (\$i = 0; \$i -lt \$screens.Length; \$i++) {
+    if (\$i -ne \$targetIdx) {
+        \$form = New-Object System.Windows.Forms.Form
+        \$form.BackColor = [System.Drawing.Color]::Black
+        \$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
+        \$form.Bounds = \$screens[\$i].Bounds
+        \$form.TopMost = \$true
+        \$form.ShowInTaskbar = \$false
+        \$form.StartPosition = [System.Windows.Forms.FormStartPosition]::Manual
+        \$form.add_Click({ [System.Windows.Forms.Application]::Exit() })
+        \$forms += \$form
+    }
+}
+foreach (\$f in \$forms) { \$f.Show() }
+[System.Windows.Forms.Application]::Run()
+''';
+
+    // Start asynchronously so we don't block
+    Process.start('powershell', ['-WindowStyle', 'Hidden', '-Command', script]).catchError((e) {
+       debugPrint('Black screen script error: $e');
+       throw e;
+    });
+
+    // Profile Auto-Login via Keyboard
+    if (profileIndex != null) {
+      Future(() async {
+        // Wait 6 seconds for Netflix to fully load and focus the first profile
+        await Future.delayed(const Duration(seconds: 6));
+        
+        final List<String> scriptLines = [];
+        scriptLines.add('''
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class NetflixKB {
+  [DllImport("user32.dll")]
+  public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, UIntPtr dwExtraInfo);
+}
+"@
+''');
+
+        // VK_RIGHT = 0x27, VK_RETURN = 0x0D
+        for (int i = 0; i < profileIndex!; i++) {
+          scriptLines.add('[NetflixKB]::keybd_event(0x27, 0, 0, [UIntPtr]::Zero)');
+          scriptLines.add('Start-Sleep -Milliseconds 50');
+          scriptLines.add('[NetflixKB]::keybd_event(0x27, 0, 2, [UIntPtr]::Zero)');
+          scriptLines.add('Start-Sleep -Milliseconds 300');
+        }
+
+        // Press Enter
+        scriptLines.add('[NetflixKB]::keybd_event(0x0D, 0, 0, [UIntPtr]::Zero)');
+        scriptLines.add('Start-Sleep -Milliseconds 50');
+        scriptLines.add('[NetflixKB]::keybd_event(0x0D, 0, 2, [UIntPtr]::Zero)');
+
+        if (pin != null && pin.isNotEmpty) {
+          scriptLines.add('Start-Sleep -Milliseconds 1500');
+          // PIN characters (0-9 are 0x30 to 0x39)
+          for (int i = 0; i < pin.length; i++) {
+            final char = pin[i];
+            final val = int.tryParse(char);
+            if (val != null) {
+              final vk = 0x30 + val;
+              scriptLines.add('[NetflixKB]::keybd_event($vk, 0, 0, [UIntPtr]::Zero)');
+              scriptLines.add('Start-Sleep -Milliseconds 50');
+              scriptLines.add('[NetflixKB]::keybd_event($vk, 0, 2, [UIntPtr]::Zero)');
+              scriptLines.add('Start-Sleep -Milliseconds 100');
+            }
+          }
+        }
+
+        try {
+          await Process.run('powershell', ['-NoProfile', '-NonInteractive', '-Command', scriptLines.join('\n')]);
+        } catch (e) {
+          debugPrint('Netflix macro error: $e');
+        }
+      });
+    }
+
+    return true;
   }
 }
