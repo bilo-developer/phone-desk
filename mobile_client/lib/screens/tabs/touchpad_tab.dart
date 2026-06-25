@@ -23,30 +23,63 @@ class TouchpadTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onScaleUpdate: _onScaleUpdate,
-      onTap: _onTap,
-      onSecondaryTap: _onSecondaryTap,
-      onDoubleTap: () => ApiService().sendMouse('left_click', click: true),
-      child: Container(
-        color: Colors.transparent,
+    return SafeArea(
+      child: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: GlassContainer(
-            width: double.infinity,
-            height: 400,
-            child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.touch_app, size: 80, color: Colors.white24),
-              SizedBox(height: 16),
-              Text('Touchpad Alanı', style: TextStyle(color: Colors.white54, fontSize: 18)),
-              Text('Fareyi hareket ettirmek için sürükleyin', style: TextStyle(color: Colors.white38)),
-            ],
+        child: Column(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onScaleUpdate: _onScaleUpdate,
+                onTap: _onTap,
+                onSecondaryTap: _onSecondaryTap,
+                onDoubleTap: () => ApiService().sendMouse('left_click', click: true),
+                child: GlassContainer(
+                  width: double.infinity,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.touch_app, size: 80, color: Colors.white24),
+                        SizedBox(height: 16),
+                        Text('Touchpad Alanı', style: TextStyle(color: Colors.white54, fontSize: 18)),
+                        Text('Fareyi hareket ettirmek için sürükleyin', style: TextStyle(color: Colors.white38)),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTapDown: (_) => ApiService().sendMouse('left_click', click: true),
+                    child: GlassContainer(
+                      height: 80,
+                      child: const Center(
+                        child: Text('Sol Tık', style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: GestureDetector(
+                    onTapDown: (_) => ApiService().sendMouse('right_click'),
+                    child: GlassContainer(
+                      height: 80,
+                      child: const Center(
+                        child: Text('Sağ Tık', style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 60), // Space for bottom nav
+          ],
         ),
       ),
     );

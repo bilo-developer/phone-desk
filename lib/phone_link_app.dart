@@ -498,6 +498,20 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
              _screenStreamer.setResolution(resMode);
           }
 
+          final displayId = request.uri.queryParameters['displayId'];
+          if (displayId != null) {
+            final displays = await screenRetriever.getAllDisplays();
+            try {
+              final selected = displays.firstWhere((d) => d.id == displayId || d.name == displayId);
+              _screenStreamer.setCaptureRect(
+                selected.visiblePosition?.dx.toInt() ?? 0,
+                selected.visiblePosition?.dy.toInt() ?? 0,
+                selected.size.width.toInt(),
+                selected.size.height.toInt(),
+              );
+            } catch(_) {}
+          }
+
           final fpsStr = request.uri.queryParameters['fps'];
           if (fpsStr != null) {
             final fps = int.tryParse(fpsStr) ?? 15;
@@ -568,6 +582,8 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           final list = displays.map((d) => {
             'name': d.name,
             'id': d.id,
+            'x': d.visiblePosition?.dx ?? 0,
+            'y': d.visiblePosition?.dy ?? 0,
             'width': d.size.width,
             'height': d.size.height,
           }).toList();
@@ -629,6 +645,49 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
             response.write('OK');
           } catch(e) {
             response.statusCode = 400;
+          }
+          await response.close();
+        }
+        else if (request.method == 'POST' && path == '/deck/add-button') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final profileId = data['profileId'] ?? _deckManager.activeProfileId;
+            final button = DeckButton.fromJson(data['button']);
+            
+            final profile = _deckManager.profiles.firstWhere((p) => p.id == profileId);
+            profile.buttons.add(button);
+            await _deckManager.save();
+            if (mounted) setState(() {});
+            
+            response.statusCode = 200;
+            response.write('OK');
+          } catch(e) {
+            response.statusCode = 400;
+            response.write(e.toString());
+          }
+          await response.close();
+        }
+        else if (request.method == 'POST' && path == '/password/update') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final newPassword = data['password'];
+            if (newPassword != null && newPassword.toString().length >= 4) {
+               final prefs = await SharedPreferences.getInstance();
+               await prefs.setString('web_password', newPassword);
+               _savedPassword = newPassword;
+               if (mounted) setState(() {
+                 _pwdController.text = newPassword;
+               });
+               response.statusCode = 200;
+               response.write('OK');
+            } else {
+               response.statusCode = 400;
+               response.write('Invalid password');
+            }
+          } catch(e) {
+             response.statusCode = 400;
           }
           await response.close();
         }

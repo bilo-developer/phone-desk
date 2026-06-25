@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -117,16 +118,20 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppBackground(
-        child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GlassContainer(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  children: [
+        child: LiquidGlassLayer(
+          settings: const LiquidGlassSettings(
+            thickness: 10,
+            blur: 15,
+            glassColor: Color(0x22FFFFFF),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    children: [
                     const Icon(Icons.settings_remote, size: 80, color: Colors.blueAccent),
                     const SizedBox(height: 24),
                     const Text('Phone Desk', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -191,13 +196,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 icon: const Icon(Icons.qr_code_scanner, color: Colors.white70),
                 label: const Text('QR Kod ile Bağlan', style: TextStyle(color: Colors.white70)),
               ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

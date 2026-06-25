@@ -115,7 +115,55 @@ class ApiService {
     } catch (_) {}
   }
 
-  String get screenStreamUrl => '$baseUrl/screen/frame?pwd=$password';
+  Future<bool> addDeckButton(String profileId, Map<String, dynamic> button) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/deck/add-button'),
+        headers: headers,
+        body: jsonEncode({'profileId': profileId, 'button': button}),
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> updatePassword(String newPassword) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/password/update'),
+        headers: headers,
+        body: jsonEncode({'newPassword': newPassword}),
+      );
+      if (res.statusCode == 200) {
+        password = newPassword;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('password', newPassword);
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  String screenStreamUrl([String? displayId]) {
+    String url = '$baseUrl/screen/frame?pwd=$password';
+    if (displayId != null && displayId.isNotEmpty) {
+      url += '&displayId=$displayId';
+    }
+    return url;
+  }
+
+  Future<List<dynamic>> getDisplays() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/displays'), headers: headers);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (_) {}
+    return [];
+  }
   
   Future<void> stopScreenStream() async {
     try {

@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
 class GlassContainer extends StatelessWidget {
   final Widget child;
@@ -7,8 +7,8 @@ class GlassContainer extends StatelessWidget {
   final double? height;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
-  final BorderRadius? borderRadius;
-  final double blur;
+  final double borderRadius;
+  final bool isFake;
   final double opacity;
   final Color? borderColor;
 
@@ -19,38 +19,47 @@ class GlassContainer extends StatelessWidget {
     this.height,
     this.padding,
     this.margin,
-    this.borderRadius,
-    this.blur = 15.0,
-    this.opacity = 0.15,
+    this.borderRadius = 24.0,
+    this.isFake = false,
+    this.opacity = 0.1,
     this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final radius = borderRadius ?? BorderRadius.circular(16);
-
-    return Container(
+    Widget content = Container(
       width: width,
       height: height,
-      margin: margin,
-      child: ClipRRect(
-        borderRadius: radius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha((opacity * 255).toInt()),
-              borderRadius: radius,
-              border: Border.all(
-                color: borderColor ?? Colors.white.withAlpha(51),
-                width: 1.5,
-              ),
-            ),
-            child: child,
-          ),
-        ),
+      padding: padding,
+      decoration: BoxDecoration(
+        border: Border.all(color: borderColor ?? Colors.white.withAlpha((opacity * 255).toInt()), width: 1.0),
+        borderRadius: BorderRadius.circular(borderRadius),
       ),
+      child: child,
     );
+
+    final shape = LiquidRoundedSuperellipse(borderRadius: borderRadius);
+
+    Widget glassWidget;
+    if (isFake) {
+      glassWidget = FakeGlass(
+        shape: shape,
+        settings: const LiquidGlassSettings(
+          blur: 40,
+          glassColor: Color.fromRGBO(28, 30, 35, 0.6),
+        ),
+        child: content,
+      );
+    } else {
+      glassWidget = LiquidGlass(
+        shape: shape,
+        child: content,
+      );
+    }
+
+    if (margin != null) {
+      return Padding(padding: margin!, child: glassWidget);
+    }
+    return glassWidget;
   }
 }

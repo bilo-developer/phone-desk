@@ -17,6 +17,13 @@ class ScreenStreamer {
   int _targetWidth = 1920;
   int _jpegQuality = 65;
 
+  // Capture rect
+  int _captureX = 0;
+  int _captureY = 0;
+  int? _captureW;
+  int? _captureH;
+
+
   final _frameController = StreamController<Uint8List>.broadcast();
 
   int get targetFps => _targetFps;
@@ -41,6 +48,17 @@ class ScreenStreamer {
     } else {
       _targetWidth = 1920;
       _jpegQuality = 65;
+    }
+  }
+
+  void setCaptureRect(int x, int y, int w, int h) {
+    _captureX = x;
+    _captureY = y;
+    _captureW = w;
+    _captureH = h;
+    if (_isStreaming) {
+      stop();
+      start();
     }
   }
 
@@ -78,10 +96,12 @@ class ScreenStreamer {
       int hwnd = GetDesktopWindow();
       int hdcScreen = GetDC(hwnd);
       
-      int width = GetSystemMetrics(SM_CXSCREEN);
-      int height = GetSystemMetrics(SM_CYSCREEN);
+      int width = _captureW ?? GetSystemMetrics(SM_CXSCREEN);
+      int height = _captureH ?? GetSystemMetrics(SM_CYSCREEN);
+      int srcX = _captureX;
+      int srcY = _captureY;
       
-      if (width == 0 || height == 0) {
+      if (width <= 0 || height <= 0) {
          log('Error: Invalid screen dimensions $width x $height');
          return;
       }
@@ -90,7 +110,7 @@ class ScreenStreamer {
       int hbm = CreateCompatibleBitmap(hdcScreen, width, height);
       int hOld = SelectObject(hdcMem, hbm);
       
-      BitBlt(hdcMem, 0, 0, width, height, hdcScreen, 0, 0, SRCCOPY);
+      BitBlt(hdcMem, 0, 0, width, height, hdcScreen, srcX, srcY, SRCCOPY);
       
       final bmi = calloc<BITMAPINFO>();
       bmi.ref.bmiHeader.biSize = sizeOf<BITMAPINFOHEADER>();
