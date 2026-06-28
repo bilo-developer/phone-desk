@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phone Desk - System Control</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdbcc",
+                        "glass-surface": "rgba(28, 30, 35, 0.6)",
+                        "primary": "#adc6ff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-container": "#4c1a00",
+                        "on-secondary-fixed-variant": "#7200a3",
+                        "outline": "#8c909f",
+                        "secondary": "#e8b3ff",
+                        "on-primary-container": "#00285c",
+                        "on-background": "#e2e2e9",
+                        "surface-container": "#1e2025",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-container-lowest": "#0c0e13",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-low": "#1a1b21",
+                        "on-secondary": "#510074",
+                        "on-secondary-fixed": "#310048",
+                        "inverse-primary": "#005bc1",
+                        "secondary-fixed-dim": "#e8b3ff",
+                        "on-secondary-container": "#e5a9ff",
+                        "on-primary": "#002e69",
+                        "secondary-container": "#7d01b1",
+                        "surface": "#111318",
+                        "outline-glow": "rgba(255, 255, 255, 0.1)",
+                        "on-tertiary": "#571e00",
+                        "primary-container": "#4b8eff",
+                        "error-container": "#93000a",
+                        "surface-container-high": "#282a2f",
+                        "on-primary-fixed": "#001a41",
+                        "surface-tint": "#adc6ff",
+                        "on-error-container": "#ffdad6",
+                        "input-glass": "rgba(255, 255, 255, 0.05)",
+                        "inverse-surface": "#e2e2e9",
+                        "on-primary-fixed-variant": "#004494",
+                        "inverse-on-surface": "#2e3036",
+                        "surface-container-highest": "#33353a",
+                        "outline-variant": "#424753",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "surface-dim": "#111318",
+                        "secondary-fixed": "#f6d9ff",
+                        "background": "#111318",
+                        "on-surface": "#e2e2e9",
+                        "tertiary-container": "#ef6719",
+                        "surface-bright": "#37393f",
+                        "surface-variant": "#33353a",
+                        "tertiary": "#ffb695",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "stack-gap": "16px",
+                        "container-padding": "20px",
+                        "touch-target": "44px",
+                        "grid-gutter": "12px"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Inter"],
+                        "headline-xl-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["13px", {"lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "headline-xl-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #111318;
+            color: #e2e2e9;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Orbs */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #005bc1 0%, transparent 70%); }
+        .orb-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #7d01b1 0%, transparent 70%); }
+        .orb-3 { top: 40%; left: 30%; width: 40vw; height: 40vw; background: radial-gradient(circle, #adc6ff 0%, transparent 70%); opacity: 0.2; }
+
+        /* Liquid Slider Styles */
+        .liquid-slider-track {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .liquid-slider-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #005bc1, #4b8eff);
+            border-radius: 9999px;
+            transition: width 0.1s ease-out;
+        }
+        
+        .liquid-slider-fill-bright {
+             background: linear-gradient(90deg, #ef6719, #ffb695);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            margin: 0;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 100%;
+            width: 44px; /* Touch target */
+            background: transparent;
+            cursor: pointer;
+        }
+        
+        /* Power Grid Glows */
+        .power-btn-red { background: rgba(147, 0, 10, 0.2); box-shadow: 0 0 20px rgba(147, 0, 10, 0.4); border-color: rgba(255, 180, 171, 0.3); }
+        .power-btn-blue { background: rgba(0, 91, 193, 0.2); box-shadow: 0 0 20px rgba(0, 91, 193, 0.4); border-color: rgba(173, 198, 255, 0.3); }
+        .power-btn-purple { background: rgba(125, 1, 177, 0.2); box-shadow: 0 0 20px rgba(125, 1, 177, 0.4); border-color: rgba(232, 179, 255, 0.3); }
+        .power-btn-orange { background: rgba(239, 103, 25, 0.2); box-shadow: 0 0 20px rgba(239, 103, 25, 0.4); border-color: rgba(255, 182, 149, 0.3); }
+
+        .glass-panel {
+            background: rgba(28, 30, 35, 0.6);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col items-center justify-start pb-32">
+<!-- Ambient Background -->
+<div class="ambient-orb orb-1"></div>
+<div class="ambient-orb orb-2"></div>
+<div class="ambient-orb orb-3"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 backdrop-blur-[40px] bg-glass-surface dark:bg-glass-surface border-b border-white/10 flex justify-between items-center px-container-padding h-touch-target">
+<button class="w-touch-target h-touch-target flex items-center justify-center text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-[24px]">settings_remote</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim text-center">Remote Control</h1>
+<button class="w-touch-target h-touch-target flex items-center justify-center text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-[24px]">account_circle</span>
+</button>
+</header>
+<!-- Main Content Container (Fluid but max-width for transactions/settings) -->
+<main class="w-full max-w-[448px] px-container-padding pt-[100px] flex flex-col gap-8">
+<!-- Sliders Section -->
+<section class="flex flex-col gap-stack-gap">
+<!-- Volume Slider -->
+<div class="glass-panel rounded-xl p-4 flex flex-col gap-2">
+<div class="flex justify-between items-center px-2">
+<span class="font-label-lg text-label-lg text-on-surface">Volume</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="vol-val">65%</span>
+</div>
+<div class="h-12 w-full liquid-slider-track relative flex items-center px-4">
+<div class="liquid-slider-fill" id="vol-fill" style="width: 65%;"></div>
+<span class="material-symbols-outlined absolute left-4 z-20 text-on-surface" style="font-variation-settings: 'FILL' 1;">volume_up</span>
+<input aria-label="Volume" id="vol-slider" max="100" min="0" type="range" value="65"/>
+</div>
+</div>
+<!-- Brightness Slider -->
+<div class="glass-panel rounded-xl p-4 flex flex-col gap-2">
+<div class="flex justify-between items-center px-2">
+<span class="font-label-lg text-label-lg text-on-surface">Brightness</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="bright-val">80%</span>
+</div>
+<div class="h-12 w-full liquid-slider-track relative flex items-center px-4">
+<div class="liquid-slider-fill liquid-slider-fill-bright" id="bright-fill" style="width: 80%;"></div>
+<span class="material-symbols-outlined absolute left-4 z-20 text-on-surface" style="font-variation-settings: 'FILL' 1;">light_mode</span>
+<input aria-label="Brightness" id="bright-slider" max="100" min="0" type="range" value="80"/>
+</div>
+</div>
+</section>
+<!-- Power Grid Section -->
+<section class="grid grid-cols-2 gap-4">
+<!-- Shutdown -->
+<button class="glass-panel power-btn-red rounded-full aspect-square flex flex-col items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300">
+<span class="material-symbols-outlined text-[32px] text-error">power_settings_new</span>
+<span class="font-label-sm text-label-sm text-on-surface">Shutdown</span>
+</button>
+<!-- Restart -->
+<button class="glass-panel power-btn-blue rounded-full aspect-square flex flex-col items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300">
+<span class="material-symbols-outlined text-[32px] text-primary">restart_alt</span>
+<span class="font-label-sm text-label-sm text-on-surface">Restart</span>
+</button>
+<!-- Sleep -->
+<button class="glass-panel power-btn-purple rounded-full aspect-square flex flex-col items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300">
+<span class="material-symbols-outlined text-[32px] text-secondary">mode_night</span>
+<span class="font-label-sm text-label-sm text-on-surface">Sleep</span>
+</button>
+<!-- Lock -->
+<button class="glass-panel power-btn-orange rounded-full aspect-square flex flex-col items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300">
+<span class="material-symbols-outlined text-[32px] text-tertiary">lock</span>
+<span class="font-label-sm text-label-sm text-on-surface">Lock</span>
+</button>
+</section>
+<!-- Battery Info -->
+<section class="mt-4">
+<div class="glass-panel rounded-xl p-4 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-input-glass flex items-center justify-center border border-outline-glow">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">battery_charging_80</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">Battery Status: 82%</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Charging - 1h 20m until full</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-[448px] rounded-full backdrop-blur-[40px] z-50 border border-white/10 shadow-lg shadow-primary/20 bg-glass-surface dark:bg-glass-surface flex justify-around items-center py-2 px-4 md:hidden">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors active:scale-90 duration-150 rounded-full">
+<span class="material-symbols-outlined">backpack</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full w-11 h-11 hover:bg-white/5 transition-colors active:scale-90 duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitor</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors active:scale-90 duration-150 rounded-full">
+<span class="material-symbols-outlined">folder_open</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors active:scale-90 duration-150 rounded-full">
+<span class="material-symbols-outlined">keyboard_command_key</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors active:scale-90 duration-150 rounded-full">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</nav>
+<script>
+        // Simple slider interaction logic
+        const volSlider = document.getElementById('vol-slider');
+        const volFill = document.getElementById('vol-fill');
+        const volVal = document.getElementById('vol-val');
+        const volIcon = volSlider.previousElementSibling;
+
+        volSlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            volFill.style.width = `${val}%`;
+            volVal.textContent = `${val}%`;
+            
+            if(val == 0) {
+                volIcon.textContent = 'volume_off';
+            } else if (val < 50) {
+                 volIcon.textContent = 'volume_down';
+            } else {
+                 volIcon.textContent = 'volume_up';
+            }
+        });
+
+        const brightSlider = document.getElementById('bright-slider');
+        const brightFill = document.getElementById('bright-fill');
+        const brightVal = document.getElementById('bright-val');
+
+        brightSlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            brightFill.style.width = `${val}%`;
+            brightVal.textContent = `${val}%`;
+        });
+    </script>
+</body></html>

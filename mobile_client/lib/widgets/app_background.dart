@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
 class AppBackground extends StatelessWidget {
   final Widget child;
@@ -11,50 +13,48 @@ class AppBackground extends StatelessWidget {
       children: [
         // Deep background
         Container(
-          color: const Color(0xFF020617),
+          color: AppTheme.background,
         ),
-        // Gradient blobs
+        // Atmospheric blobs
         Positioned(
           top: -100,
           left: -100,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.blueAccent.withAlpha(76),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blueAccent.withAlpha(76),
-                  blurRadius: 100,
-                  spreadRadius: 50,
-                ),
-              ],
-            ),
-          ),
+          child: _buildBlob(AppTheme.primary.withAlpha(51), 400), // bg-primary/20
         ),
         Positioned(
           bottom: -100,
           right: -100,
+          child: _buildBlob(AppTheme.secondaryContainer.withAlpha(76), 400), // bg-secondary-container/30
+        ),
+        Positioned(
+          top: 150,
+          right: 50,
+          child: _buildBlob(AppTheme.tertiaryContainer.withAlpha(25), 300), // bg-tertiary-container/10
+        ),
+        // Content layer
+        Positioned.fill(
+          child: child,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBlob(Color color, double size) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
           child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.purpleAccent.withAlpha(76),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purpleAccent.withAlpha(76),
-                  blurRadius: 100,
-                  spreadRadius: 50,
-                ),
-              ],
-            ),
+            color: Colors.transparent,
           ),
         ),
-        // Content
-        child,
-      ],
+      ),
     );
   }
 }

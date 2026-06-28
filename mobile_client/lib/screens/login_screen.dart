@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -8,6 +7,7 @@ import '../services/api_service.dart';
 import 'dashboard_screen.dart';
 import '../widgets/glass_container.dart';
 import '../widgets/app_background.dart';
+import '../theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -118,91 +118,160 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppBackground(
-        child: LiquidGlassLayer(
-          fake: true,
-          settings: const LiquidGlassSettings(
-            thickness: 15,
-            blur: 20,
-            glassColor: Color(0x33FFFFFF),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 448),
                 child: GlassContainer(
                   padding: const EdgeInsets.all(32.0),
+                  borderRadius: 32.0,
                   child: Column(
                     children: [
-                    const Icon(Icons.settings_remote, size: 80, color: Colors.blueAccent),
-                    const SizedBox(height: 24),
-                    const Text('Phone Desk', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(height: 8),
-                    const Text('Bilgisayarınıza Bağlanın', style: TextStyle(color: Colors.white70)),
-                    const SizedBox(height: 48),
-                    TextField(
-                controller: _ipController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'IP Adresi',
-                  labelStyle: const TextStyle(color: Colors.white54),
-                  filled: true,
-                  fillColor: const Color(0xFF1E293B),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _portController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Port',
-                  labelStyle: const TextStyle(color: Colors.white54),
-                  filled: true,
-                  fillColor: Colors.white.withAlpha(13),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _pwdController,
-                style: const TextStyle(color: Colors.white),
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Güvenlik Şifresi',
-                  labelStyle: const TextStyle(color: Colors.white54),
-                  filled: true,
-                  fillColor: Colors.white.withAlpha(13),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: _isLoading ? null : _connect,
-                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Bağlan', style: TextStyle(fontSize: 18, color: Colors.white)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton.icon(
-                onPressed: () => setState(() => _isScanning = true),
-                icon: const Icon(Icons.qr_code_scanner, color: Colors.white70),
-                label: const Text('QR Kod ile Bağlan', style: TextStyle(color: Colors.white70)),
-              ),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(13),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withAlpha(25)),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.settings_remote, size: 48, color: AppTheme.primary),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text('Phone Desk', style: TextStyle(fontFamily: 'Inter', fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.onSurface, letterSpacing: -0.5)),
+                      const SizedBox(height: 8),
+                      const Text('Bilgisayarınıza Bağlanın', style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppTheme.onSurfaceVariant)),
+                      const SizedBox(height: 40),
+                      _buildTextField(
+                        controller: _ipController,
+                        label: 'IP Adresi',
+                        icon: Icons.router,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: _buildTextField(
+                              controller: _portController,
+                              label: 'Port',
+                              icon: null,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 8,
+                            child: _buildTextField(
+                              controller: _pwdController,
+                              label: 'Güvenlik Şifresi',
+                              icon: Icons.lock,
+                              obscureText: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [AppTheme.primaryContainer, AppTheme.inversePrimary],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.inversePrimary.withAlpha(102),
+                              blurRadius: 15,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(28),
+                            onTap: _isLoading ? null : _connect,
+                            child: Center(
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(color: AppTheme.onPrimary)
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Text('Bağlan', style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.onPrimary)),
+                                        const SizedBox(width: 8),
+                                        Icon(Icons.arrow_forward, size: 20, color: AppTheme.onPrimary),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      const Divider(color: Color(0x0DFFFFFF), height: 1),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: AppTheme.onSurfaceVariant),
+                        onPressed: () => setState(() => _isScanning = true),
+                        icon: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(13),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.qr_code_scanner, size: 20),
+                        ),
+                        label: const Text('QR Kod ile Bağlan', style: TextStyle(fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600)),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Güvenli bağlantı AES-256 ile uçtan uca şifrelenir.',
+                        style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppTheme.onSurfaceVariant.withAlpha(102)),
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    IconData? icon,
+    bool obscureText = false,
+    TextAlign textAlign = TextAlign.start,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.inputGlass,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withAlpha(25)),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        textAlign: textAlign,
+        style: const TextStyle(color: AppTheme.onSurface, fontFamily: 'Inter', fontSize: 16),
+        decoration: InputDecoration(
+          hintText: label,
+          hintStyle: TextStyle(color: AppTheme.onSurfaceVariant.withAlpha(128)),
+          prefixIcon: icon != null ? Icon(icon, color: AppTheme.onSurfaceVariant) : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );

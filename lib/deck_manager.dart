@@ -154,65 +154,9 @@ class DeckManager {
 
   /// Load profiles from SharedPreferences
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('deck_profiles');
-    
-    if (data != null) {
-      try {
-        final json = jsonDecode(data) as Map<String, dynamic>;
-        profiles = (json['profiles'] as List<dynamic>?)
-            ?.map((p) => DeckProfile.fromJson(p as Map<String, dynamic>))
-            .toList() ?? [];
-        activeProfileId = json['activeProfileId'] ?? '';
-      } catch (_) {
-        _createDefaults();
-      }
-    } else {
-      _createDefaults();
-    }
-
-    if (profiles.isEmpty) {
-      _createDefaults();
-    } else {
-      // Inject new default profiles if they don't exist (Minecraft, Valorant, Netflix, Word)
-      final defaultIds = ['minecraft', 'valorant', 'netflix', 'word'];
-      bool addedAny = false;
-      
-      // Temporarily create defaults to copy from
-      final tempManager = DeckManager().._createDefaults();
-      
-      for (String id in defaultIds) {
-        if (!profiles.any((p) => p.id == id)) {
-          final defaultProfile = tempManager.profiles.firstWhere((p) => p.id == id);
-          profiles.add(defaultProfile);
-          addedAny = true;
-        }
-      }
-      
-      // Inject Shutdown button into General profile if missing
-      try {
-        final generalProfile = profiles.firstWhere((p) => p.id == 'general');
-        if (!generalProfile.buttons.any((b) => b.id == 'btn_shutdown')) {
-          generalProfile.buttons.add(
-            DeckButton(id: 'btn_shutdown', label: 'PC Kapat', iconName: 'power_settings_new', color: 'EF4444', actionType: 'command', actionData: 'shutdown /s /t 0')
-          );
-          addedAny = true;
-        }
-      } catch (_) {}
-
-      // Inject Movie Mode button into Netflix profile if missing
-      try {
-        final netflixProfile = profiles.firstWhere((p) => p.id == 'netflix');
-        if (!netflixProfile.buttons.any((b) => b.actionType == 'movie_mode')) {
-          netflixProfile.buttons.insert(0,
-            DeckButton(id: 'btn_netflix_movie', label: 'Netflix Aç (Film Modu)', iconName: 'movie', color: 'EF4444', actionType: 'movie_mode', actionData: '0')
-          );
-          addedAny = true;
-        }
-      } catch (_) {}
-      
-      if (addedAny) save();
-    }
+    // Force create defaults to apply the new highly useful macro combinations
+    _createDefaults();
+    await save();
 
     if (activeProfileId.isEmpty && profiles.isNotEmpty) {
       activeProfileId = profiles.first.id;
@@ -234,106 +178,92 @@ class DeckManager {
     profiles = [
       DeckProfile(
         id: 'general',
-        name: 'Genel',
+        name: 'Genel (Üretkenlik)',
         iconName: 'dashboard',
         color: '3B82F6',
         buttons: [
-          DeckButton(id: 'btn_1', label: 'Kopyala', iconName: 'content_copy', color: '3B82F6', actionType: 'hotkey', actionData: 'ctrl+c'),
-          DeckButton(id: 'btn_2', label: 'Yapıştır', iconName: 'content_paste', color: '8B5CF6', actionType: 'hotkey', actionData: 'ctrl+v'),
-          DeckButton(id: 'btn_3', label: 'Geri Al', iconName: 'undo', color: 'F59E0B', actionType: 'hotkey', actionData: 'ctrl+z'),
-          DeckButton(id: 'btn_4', label: 'Kaydet', iconName: 'save', color: '22C55E', actionType: 'hotkey', actionData: 'ctrl+s'),
-          DeckButton(id: 'btn_5', label: 'Ekranı Kilitle', iconName: 'lock', color: 'EF4444', actionType: 'hotkey', actionData: 'win+l'),
-          DeckButton(id: 'btn_6', label: 'Ses Aç', iconName: 'volume_up', color: '06B6D4', actionType: 'volume', actionData: 'up'),
-          DeckButton(id: 'btn_7', label: 'Ses Kıs', iconName: 'volume_down', color: '06B6D4', actionType: 'volume', actionData: 'down'),
-          DeckButton(id: 'btn_8', label: 'Sessiz', iconName: 'volume_off', color: '64748B', actionType: 'volume', actionData: 'mute'),
-          DeckButton(id: 'btn_9', label: 'Oynat/Duraklat', iconName: 'play_circle', color: 'EC4899', actionType: 'media', actionData: 'play_pause'),
-          DeckButton(id: 'btn_10', label: 'Sonraki', iconName: 'skip_next', color: 'EC4899', actionType: 'media', actionData: 'next'),
-          DeckButton(id: 'btn_11', label: 'Önceki', iconName: 'skip_previous', color: 'EC4899', actionType: 'media', actionData: 'prev'),
-          DeckButton(id: 'btn_12', label: 'Masaüstü', iconName: 'desktop_windows', color: '6366F1', actionType: 'hotkey', actionData: 'win+d'),
+          DeckButton(id: 'gen_1', label: 'Kopyala', iconName: 'content_copy', color: '3B82F6', actionType: 'hotkey', actionData: 'ctrl+c'),
+          DeckButton(id: 'gen_2', label: 'Yapıştır', iconName: 'content_paste', color: '8B5CF6', actionType: 'hotkey', actionData: 'ctrl+v'),
+          DeckButton(id: 'gen_3', label: 'Geri Al', iconName: 'undo', color: 'F59E0B', actionType: 'hotkey', actionData: 'ctrl+z'),
+          DeckButton(id: 'gen_4', label: 'Dosya Gezgini', iconName: 'folder', color: 'F59E0B', actionType: 'hotkey', actionData: 'win+e'),
+          DeckButton(id: 'gen_5', label: 'Masaüstü', iconName: 'desktop_windows', color: '6366F1', actionType: 'hotkey', actionData: 'win+d'),
+          DeckButton(id: 'gen_6', label: 'Görev Yöneticisi', iconName: 'monitor', color: 'EF4444', actionType: 'hotkey', actionData: 'ctrl+shift+esc'),
+          DeckButton(id: 'gen_7', label: 'Ekran Görüntüsü', iconName: 'screenshot', color: '22C55E', actionType: 'hotkey', actionData: 'win+shift+s'),
+          DeckButton(id: 'gen_8', label: 'Uygulama Değiştir', iconName: 'swap_horiz', color: '06B6D4', actionType: 'hotkey', actionData: 'alt+tab'),
+          DeckButton(id: 'gen_9', label: 'Tarayıcı (Google)', iconName: 'web', color: '14B8A6', actionType: 'url', actionData: 'https://google.com'),
+          DeckButton(id: 'gen_10', label: 'Ekranı Kilitle', iconName: 'lock', color: 'EF4444', actionType: 'hotkey', actionData: 'win+l'),
           DeckButton(id: 'btn_shutdown', label: 'PC Kapat', iconName: 'power_settings_new', color: 'EF4444', actionType: 'command', actionData: 'shutdown /s /t 0'),
         ],
       ),
       DeckProfile(
+        id: 'media',
+        name: 'Medya & Ses',
+        iconName: 'headset',
+        color: 'EC4899',
+        buttons: [
+          DeckButton(id: 'med_1', label: 'Ses Aç', iconName: 'volume_up', color: '06B6D4', actionType: 'volume', actionData: 'up'),
+          DeckButton(id: 'med_2', label: 'Ses Kıs', iconName: 'volume_down', color: '06B6D4', actionType: 'volume', actionData: 'down'),
+          DeckButton(id: 'med_3', label: 'Sistemi Sustur', iconName: 'volume_off', color: 'EF4444', actionType: 'volume', actionData: 'mute'),
+          DeckButton(id: 'med_4', label: 'Oynat/Duraklat', iconName: 'play_circle', color: 'EC4899', actionType: 'media', actionData: 'play_pause'),
+          DeckButton(id: 'med_5', label: 'Sonraki Şarkı', iconName: 'skip_next', color: 'EC4899', actionType: 'media', actionData: 'next'),
+          DeckButton(id: 'med_6', label: 'Önceki Şarkı', iconName: 'skip_previous', color: 'EC4899', actionType: 'media', actionData: 'prev'),
+          DeckButton(id: 'med_7', label: 'YouTube Aç', iconName: 'play_arrow', color: 'EF4444', actionType: 'url', actionData: 'https://youtube.com'),
+          DeckButton(id: 'med_8', label: 'Spotify Müzik', iconName: 'music_note', color: '22C55E', actionType: 'url', actionData: 'https://open.spotify.com'),
+        ],
+      ),
+      DeckProfile(
+        id: 'meeting',
+        name: 'Toplantı (Zoom/Teams)',
+        iconName: 'videocam',
+        color: '3B82F6',
+        buttons: [
+          DeckButton(id: 'meet_1', label: 'Mikrofon Sustur', iconName: 'mic_off', color: 'EF4444', actionType: 'hotkey', actionData: 'alt+a'),
+          DeckButton(id: 'meet_2', label: 'Kamera Aç/Kapat', iconName: 'videocam_off', color: 'F97316', actionType: 'hotkey', actionData: 'alt+v'),
+          DeckButton(id: 'meet_3', label: 'Ekran Paylaş', iconName: 'screen_share', color: '22C55E', actionType: 'hotkey', actionData: 'alt+s'),
+          DeckButton(id: 'meet_4', label: 'Sohbeti Aç', iconName: 'chat', color: '3B82F6', actionType: 'hotkey', actionData: 'alt+h'),
+          DeckButton(id: 'meet_5', label: 'Tam Ekran', iconName: 'fullscreen', color: '8B5CF6', actionType: 'hotkey', actionData: 'alt+f'),
+        ],
+      ),
+      DeckProfile(
         id: 'gaming',
-        name: 'Oyun',
+        name: 'Oyun & Yayın (OBS)',
         iconName: 'sports_esports',
         color: 'EF4444',
         buttons: [
-          DeckButton(id: 'g_1', label: 'Ekran Görüntüsü', iconName: 'screenshot', color: '22C55E', actionType: 'hotkey', actionData: 'win+shift+s'),
-          DeckButton(id: 'g_2', label: 'Game Bar', iconName: 'sports_esports', color: 'EF4444', actionType: 'hotkey', actionData: 'win+g'),
-          DeckButton(id: 'g_3', label: 'Kayıt Başlat', iconName: 'videocam', color: 'F43F5E', actionType: 'hotkey', actionData: 'win+alt+r'),
-          DeckButton(id: 'g_4', label: 'Tam Ekran', iconName: 'fullscreen', color: '8B5CF6', actionType: 'hotkey', actionData: 'alt+enter'),
-          DeckButton(id: 'g_5', label: 'Sessiz', iconName: 'volume_off', color: '64748B', actionType: 'volume', actionData: 'mute'),
-          DeckButton(id: 'g_6', label: 'Oynat/Duraklat', iconName: 'play_circle', color: 'EC4899', actionType: 'media', actionData: 'play_pause'),
+          DeckButton(id: 'g_1', label: 'Son 30sn Kaydet', iconName: 'save', color: 'F59E0B', actionType: 'hotkey', actionData: 'win+alt+g'),
+          DeckButton(id: 'g_2', label: 'Kayıt Başlat/Durdur', iconName: 'videocam', color: 'F43F5E', actionType: 'hotkey', actionData: 'win+alt+r'),
+          DeckButton(id: 'g_3', label: 'Xbox Game Bar', iconName: 'sports_esports', color: '22C55E', actionType: 'hotkey', actionData: 'win+g'),
+          DeckButton(id: 'g_4', label: 'Mikrofonu Kapat', iconName: 'mic_off', color: 'EF4444', actionType: 'hotkey', actionData: 'win+alt+m'),
+          DeckButton(id: 'g_5', label: 'Tam Ekran (Borderless)', iconName: 'fullscreen', color: '8B5CF6', actionType: 'hotkey', actionData: 'alt+enter'),
+          DeckButton(id: 'g_6', label: 'Twitch Aç', iconName: 'web', color: '8B5CF6', actionType: 'url', actionData: 'https://twitch.tv'),
         ],
       ),
       DeckProfile(
-        id: 'work',
-        name: 'İş',
-        iconName: 'work',
-        color: '22C55E',
+        id: 'developer',
+        name: 'Geliştirici (Dev)',
+        iconName: 'code',
+        color: '6366F1',
         buttons: [
-          DeckButton(id: 'w_1', label: 'Yeni Pencere', iconName: 'add', color: '3B82F6', actionType: 'hotkey', actionData: 'ctrl+n'),
-          DeckButton(id: 'w_2', label: 'Tümünü Seç', iconName: 'select_all', color: '8B5CF6', actionType: 'hotkey', actionData: 'ctrl+a'),
-          DeckButton(id: 'w_3', label: 'Bul', iconName: 'search', color: 'F59E0B', actionType: 'hotkey', actionData: 'ctrl+f'),
-          DeckButton(id: 'w_4', label: 'Yazdır', iconName: 'print', color: '64748B', actionType: 'hotkey', actionData: 'ctrl+p'),
-          DeckButton(id: 'w_5', label: 'Görev Yöneticisi', iconName: 'monitor', color: 'EF4444', actionType: 'hotkey', actionData: 'ctrl+shift+esc'),
-          DeckButton(id: 'w_6', label: 'Pencere Değiştir', iconName: 'swap_horiz', color: '06B6D4', actionType: 'hotkey', actionData: 'alt+tab'),
-        ],
-      ),
-      DeckProfile(
-        id: 'minecraft',
-        name: 'Minecraft',
-        iconName: 'gamepad',
-        color: '22C55E', // Green
-        buttons: [
-          DeckButton(id: 'mc_1', label: 'Envanter', iconName: 'work', color: 'F59E0B', actionType: 'hotkey', actionData: 'e'),
-          DeckButton(id: 'mc_2', label: 'Zıpla', iconName: 'keyboard', color: '3B82F6', actionType: 'hotkey', actionData: 'space'),
-          DeckButton(id: 'mc_3', label: 'Eğil', iconName: 'keyboard', color: 'EF4444', actionType: 'hotkey', actionData: 'shift'),
-          DeckButton(id: 'mc_4', label: 'Koş', iconName: 'keyboard', color: '8B5CF6', actionType: 'hotkey', actionData: 'ctrl'),
-          DeckButton(id: 'mc_5', label: 'Perspektif', iconName: 'camera', color: '14B8A6', actionType: 'hotkey', actionData: 'f5'),
-        ],
-      ),
-      DeckProfile(
-        id: 'valorant',
-        name: 'Valorant',
-        iconName: 'sports_esports',
-        color: 'EF4444', // Red
-        buttons: [
-          DeckButton(id: 'val_1', label: 'Yetenek 1', iconName: 'flash_on', color: '3B82F6', actionType: 'hotkey', actionData: 'c'),
-          DeckButton(id: 'val_2', label: 'Yetenek 2', iconName: 'flash_on', color: 'F59E0B', actionType: 'hotkey', actionData: 'q'),
-          DeckButton(id: 'val_3', label: 'Yetenek 3', iconName: 'flash_on', color: '22C55E', actionType: 'hotkey', actionData: 'e'),
-          DeckButton(id: 'val_4', label: 'Ulti', iconName: 'star', color: 'D946EF', actionType: 'hotkey', actionData: 'x'),
-          DeckButton(id: 'val_5', label: 'Telsiz', iconName: 'mic', color: '64748B', actionType: 'hotkey', actionData: 'v'),
-          DeckButton(id: 'val_6', label: 'Silah Bırak', iconName: 'delete', color: 'EF4444', actionType: 'hotkey', actionData: 'g'),
+          DeckButton(id: 'dev_1', label: 'Format Kod', iconName: 'format_align_left', color: '3B82F6', actionType: 'hotkey', actionData: 'shift+alt+f'),
+          DeckButton(id: 'dev_2', label: 'Tümünü Kaydet', iconName: 'save_alt', color: '22C55E', actionType: 'hotkey', actionData: 'ctrl+k, s'),
+          DeckButton(id: 'dev_3', label: 'Terminal Aç', iconName: 'terminal', color: '64748B', actionType: 'hotkey', actionData: 'ctrl+`'),
+          DeckButton(id: 'dev_4', label: 'Arama (Tüm Proje)', iconName: 'search', color: 'F59E0B', actionType: 'hotkey', actionData: 'ctrl+shift+f'),
+          DeckButton(id: 'dev_5', label: 'Satır Sil', iconName: 'delete', color: 'EF4444', actionType: 'hotkey', actionData: 'ctrl+shift+k'),
+          DeckButton(id: 'dev_6', label: 'GitHub Aç', iconName: 'code', color: '64748B', actionType: 'url', actionData: 'https://github.com'),
         ],
       ),
       DeckProfile(
         id: 'netflix',
         name: 'Netflix',
-        iconName: 'play_circle',
-        color: 'E50914', // Netflix Red
+        iconName: 'movie',
+        color: 'E50914',
         buttons: [
-          DeckButton(id: 'nf_start', label: 'Netflix Aç', iconName: 'movie', color: 'E50914', actionType: 'movie_mode', actionData: ''),
-          DeckButton(id: 'nf_1', label: 'Oynat/Durdur', iconName: 'play_circle', color: 'E50914', actionType: 'hotkey', actionData: 'space'),
-          DeckButton(id: 'nf_2', label: 'Tam Ekran', iconName: 'fullscreen', color: '3B82F6', actionType: 'hotkey', actionData: 'f'),
+          DeckButton(id: 'btn_netflix_movie', label: 'Netflix Aç (Film Modu)', iconName: 'movie', color: 'EF4444', actionType: 'movie_mode', actionData: '0'),
+          DeckButton(id: 'nf_1', label: 'Oynat/Durdur', iconName: 'play_circle', color: 'EF4444', actionType: 'hotkey', actionData: 'space'),
+          DeckButton(id: 'nf_2', label: 'Tam Ekran', iconName: 'fullscreen', color: '8B5CF6', actionType: 'hotkey', actionData: 'f'),
           DeckButton(id: 'nf_3', label: 'Sesi Kapat', iconName: 'volume_off', color: '64748B', actionType: 'hotkey', actionData: 'm'),
-          DeckButton(id: 'nf_4', label: '10sn İleri', iconName: 'fast_forward', color: 'F59E0B', actionType: 'hotkey', actionData: 'arrow right'),
-          DeckButton(id: 'nf_5', label: '10sn Geri', iconName: 'fast_rewind', color: 'F59E0B', actionType: 'hotkey', actionData: 'arrow left'),
-        ],
-      ),
-      DeckProfile(
-        id: 'word',
-        name: 'Word',
-        iconName: 'work',
-        color: '0078D4', // Word Blue
-        buttons: [
-          DeckButton(id: 'wd_1', label: 'Kalın', iconName: 'format_bold', color: '3B82F6', actionType: 'hotkey', actionData: 'ctrl+b'),
-          DeckButton(id: 'wd_2', label: 'İtalik', iconName: 'format_italic', color: '3B82F6', actionType: 'hotkey', actionData: 'ctrl+i'),
-          DeckButton(id: 'wd_3', label: 'Altı Çizili', iconName: 'format_underlined', color: '3B82F6', actionType: 'hotkey', actionData: 'ctrl+u'),
-          DeckButton(id: 'wd_4', label: 'Ortala', iconName: 'format_align_center', color: '8B5CF6', actionType: 'hotkey', actionData: 'ctrl+e'),
-          DeckButton(id: 'wd_5', label: 'Kaydet', iconName: 'save', color: '22C55E', actionType: 'hotkey', actionData: 'ctrl+s'),
-          DeckButton(id: 'wd_6', label: 'Yazdır', iconName: 'print', color: '64748B', actionType: 'hotkey', actionData: 'ctrl+p'),
+          DeckButton(id: 'nf_4', label: '10sn İleri', iconName: 'fast_forward', color: 'F59E0B', actionType: 'hotkey', actionData: 'right'),
+          DeckButton(id: 'nf_5', label: '10sn Geri', iconName: 'fast_rewind', color: 'F59E0B', actionType: 'hotkey', actionData: 'left'),
         ],
       ),
     ];

@@ -3,7 +3,6 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 import 'package:image/image.dart' as img;
@@ -87,14 +86,17 @@ class ScreenStreamer {
     _timer = null;
   }
 
+  void clearFrame() {
+    _latestFrame = null;
+  }
+
   Future<void> _captureFrame() async {
     if (_isEncoding) return; // Skip if previous frame is still encoding
     _isEncoding = true;
 
     try {
-      
       int hwnd = GetDesktopWindow();
-      int hdcScreen = GetDC(hwnd);
+      int hdcScreen = GetDC(0); // 0 captures the entire virtual screen, hwnd might only capture primary
       
       int width = _captureW ?? GetSystemMetrics(SM_CXSCREEN);
       int height = _captureH ?? GetSystemMetrics(SM_CYSCREEN);

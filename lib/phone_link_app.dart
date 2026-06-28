@@ -9,10 +9,12 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'theme.dart';
+import 'widgets/glass_container.dart';
 import 'deck_manager.dart';
 import 'deck_panel.dart';
 import 'web_ui.dart';
 import 'screen_streamer.dart';
+import 'system_info.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 
 class PhoneLinkApp extends StatefulWidget {
@@ -46,6 +48,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
   final ScreenStreamer _screenStreamer = ScreenStreamer();
   final List<HttpResponse> _activeStreamResponses = [];
   List<dynamic> _netflixProfiles = [];
+  bool _isCapturingSnapshot = false;
 
   @override
   void initState() {
@@ -502,7 +505,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           if (displayId != null) {
             final displays = await screenRetriever.getAllDisplays();
             try {
-              final selected = displays.firstWhere((d) => d.id == displayId || d.name == displayId);
+              final selected = displays.firstWhere((d) => d.id.toString() == displayId || d.name == displayId);
               _screenStreamer.setCaptureRect(
                 selected.visiblePosition?.dx.toInt() ?? 0,
                 selected.visiblePosition?.dy.toInt() ?? 0,
@@ -566,6 +569,59 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
             sub.cancel();
           });
         }
+        else if (request.method == 'GET' && path == '/screen/snapshot') {
+          // Queue requests to prevent capture rect race conditions
+          while (_isCapturingSnapshot) {
+            await Future.delayed(const Duration(milliseconds: 50));
+          }
+          _isCapturingSnapshot = true;
+          
+          try {
+            final displayId = request.uri.queryParameters['displayId'];
+            debugPrint('Snapshot request for displayId: $displayId');
+            if (displayId != null) {
+              final displays = await screenRetriever.getAllDisplays();
+              try {
+                final selected = displays.firstWhere((d) => d.id.toString() == displayId || d.name == displayId);
+                debugPrint('Selected display: ${selected.name} at ${selected.visiblePosition}');
+                _screenStreamer.setCaptureRect(
+                  selected.visiblePosition?.dx.toInt() ?? 0,
+                  selected.visiblePosition?.dy.toInt() ?? 0,
+                  selected.size.width.toInt(),
+                  selected.size.height.toInt(),
+                );
+              } catch(e) {
+                debugPrint('Display not found or error: $e');
+              }
+            }
+            _screenStreamer.setFps(5);
+            _screenStreamer.start();
+            
+            // Clear latestFrame by calling clearFrame explicitly to force a fresh capture
+            _screenStreamer.stop();
+            _screenStreamer.clearFrame();
+            _screenStreamer.start();
+            
+            int retries = 0;
+            while (_screenStreamer.latestFrame == null && retries < 40) {
+              await Future.delayed(const Duration(milliseconds: 50));
+              retries++;
+            }
+
+            final frame = _screenStreamer.latestFrame;
+            if (frame == null) {
+              response.statusCode = 404;
+              response.write('No frame yet');
+            } else {
+              response.headers.contentType = ContentType('image', 'jpeg');
+              response.headers.contentLength = frame.length;
+              response.add(frame);
+            }
+          } finally {
+            _isCapturingSnapshot = false;
+            await response.close();
+          }
+        }
         else if (request.method == 'POST' && path == '/screen/stop') {
           _screenStreamer.stop();
           final responsesToClose = List<HttpResponse>.from(_activeStreamResponses);
@@ -578,17 +634,23 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           await response.close();
         }
         else if (request.method == 'GET' && path == '/displays') {
-          final displays = await screenRetriever.getAllDisplays();
-          final list = displays.map((d) => {
-            'name': d.name,
-            'id': d.id,
-            'x': d.visiblePosition?.dx ?? 0,
-            'y': d.visiblePosition?.dy ?? 0,
-            'width': d.size.width,
-            'height': d.size.height,
-          }).toList();
-          response.headers.contentType = ContentType.json;
-          response.write(jsonEncode(list));
+          debugPrint('Received /displays request');
+          try {
+            final displays = await screenRetriever.getAllDisplays();
+            final list = displays.map((d) => {
+              'name': d.name,
+              'id': d.id,
+              'x': d.visiblePosition?.dx ?? 0,
+              'y': d.visiblePosition?.dy ?? 0,
+              'width': d.size.width,
+              'height': d.size.height,
+            }).toList();
+            response.headers.contentType = ContentType.json;
+            response.write(jsonEncode(list));
+          } catch (e) {
+            response.statusCode = 500;
+            response.write(e.toString());
+          }
           await response.close();
         }
         // Deck API endpoints
@@ -677,9 +739,11 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                final prefs = await SharedPreferences.getInstance();
                await prefs.setString('web_password', newPassword);
                _savedPassword = newPassword;
-               if (mounted) setState(() {
-                 _pwdController.text = newPassword;
-               });
+               if (mounted) {
+                 setState(() {
+                   _pwdController.text = newPassword;
+                 });
+               }
                response.statusCode = 200;
                response.write('OK');
             } else {
@@ -716,6 +780,129 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           }
           await response.close();
         }
+        // ===== SYSTEM INFO ENDPOINTS =====
+        else if (request.method == 'GET' && path == '/system/info') {
+          final info = await SystemInfo.getInfo();
+          response.headers.contentType = ContentType.json;
+          response.write(jsonEncode(info));
+          await response.close();
+        }
+        else if (request.method == 'GET' && path == '/system/processes') {
+          final processes = await SystemInfo.getProcesses();
+          response.headers.contentType = ContentType.json;
+          response.write(jsonEncode(processes));
+          await response.close();
+        }
+        else if (request.method == 'POST' && path == '/system/kill-process') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final pid = data['pid'] as int;
+            final success = await SystemInfo.killProcess(pid);
+            response.statusCode = success ? 200 : 500;
+            response.write(success ? 'OK' : 'Failed');
+          } catch(e) {
+            response.statusCode = 400;
+            response.write('Error: $e');
+          }
+          await response.close();
+        }
+        // ===== CLIPBOARD ENDPOINTS =====
+        else if (request.method == 'GET' && path == '/clipboard') {
+          final text = await SystemInfo.getClipboard();
+          response.headers.contentType = ContentType.json;
+          response.write(jsonEncode({'text': text}));
+          await response.close();
+        }
+        else if (request.method == 'POST' && path == '/clipboard') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final success = await SystemInfo.setClipboard(data['text'] ?? '');
+            response.statusCode = success ? 200 : 500;
+            response.write(success ? 'OK' : 'Failed');
+          } catch(e) {
+            response.statusCode = 400;
+          }
+          await response.close();
+        }
+        // ===== KEYBOARD ENDPOINT =====
+        else if (request.method == 'POST' && path == '/keyboard') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final type = data['type'] ?? 'text';
+            final value = data['value'] ?? '';
+            bool success;
+            if (type == 'special') {
+              success = await _deckManager.keySimulator.sendSpecialKey(value);
+            } else if (type == 'combo') {
+              success = await _deckManager.keySimulator.sendKeyCombination(value);
+            } else {
+              success = await _deckManager.keySimulator.typeText(value);
+            }
+            response.statusCode = success ? 200 : 500;
+            response.write(success ? 'OK' : 'Failed');
+          } catch(e) {
+            response.statusCode = 400;
+          }
+          await response.close();
+        }
+        // ===== POWER MANAGEMENT =====
+        else if (request.method == 'POST' && path == '/system/power') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final action = data['action'] ?? '';
+            final success = await SystemInfo.powerAction(action);
+            response.statusCode = success ? 200 : 500;
+            response.write(success ? 'OK' : 'Failed');
+          } catch(e) {
+            response.statusCode = 400;
+          }
+          await response.close();
+        }
+        // ===== VOLUME =====
+        else if (request.method == 'GET' && path == '/system/volume') {
+          final vol = await SystemInfo.getVolume();
+          response.headers.contentType = ContentType.json;
+          response.write(jsonEncode({'volume': vol}));
+          await response.close();
+        }
+        else if (request.method == 'POST' && path == '/system/volume') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final level = (data['volume'] as num).toInt();
+            final success = await SystemInfo.setVolume(level);
+            response.statusCode = success ? 200 : 500;
+            response.write(success ? 'OK' : 'Failed');
+          } catch(e) {
+            response.statusCode = 400;
+          }
+          await response.close();
+        }
+        // ===== BRIGHTNESS =====
+        else if (request.method == 'POST' && path == '/system/brightness') {
+          final content = await utf8.decoder.bind(request).join();
+          try {
+            final data = jsonDecode(content);
+            final level = (data['brightness'] as num).toInt();
+            final success = await SystemInfo.setBrightness(level);
+            response.statusCode = success ? 200 : 500;
+            response.write(success ? 'OK' : 'Failed');
+          } catch(e) {
+            response.statusCode = 400;
+          }
+          await response.close();
+        }
+        // ===== NOTIFICATIONS =====
+        else if (request.method == 'GET' && path == '/notifications') {
+          final notifs = await SystemInfo.getNotifications();
+          response.headers.contentType = ContentType.json;
+          response.write(jsonEncode(notifs));
+          await response.close();
+        }
         else {
           response.statusCode = 404;
           response.write('Not found');
@@ -740,13 +927,13 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
     return DragToMoveArea(
       child: Container(
         height: 64,
-        color: context.theme.surface,
+        color: AppTheme.surface,
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Row(
           children: [
-            Icon(Icons.settings_remote, color: context.theme.primaryContainer, size: 24),
+            Icon(Icons.settings_remote, color: AppTheme.primaryContainer, size: 24),
             const SizedBox(width: 16),
-            Text('PHONE DESK', style: TextStyle(color: context.theme.primaryContainer, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -1)),
+            Text('PHONE DESK', style: TextStyle(color: AppTheme.primaryContainer, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -1)),
             const Spacer(),
             
             // Topup Mode
@@ -761,7 +948,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                   padding: const EdgeInsets.all(8.0),
                   child: Icon(
                     _isTopup ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-                    color: _isTopup ? context.theme.primaryContainer : context.theme.onSurfaceVariant,
+                    color: _isTopup ? AppTheme.primaryContainer : AppTheme.onSurfaceVariant,
                     size: 20,
                   ),
                 ),
@@ -784,7 +971,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                   padding: const EdgeInsets.all(8.0),
                   child: Icon(
                     _isCompact ? Icons.fullscreen_rounded : Icons.fullscreen_exit_rounded,
-                    color: _isCompact ? context.theme.primaryContainer : context.theme.onSurfaceVariant,
+                    color: _isCompact ? AppTheme.primaryContainer : AppTheme.onSurfaceVariant,
                     size: 20,
                   ),
                 ),
@@ -796,7 +983,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
               onTap: () async => await windowManager.minimize(),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Icon(Icons.minimize_rounded, color: context.theme.onSurfaceVariant, size: 20),
+                child: Icon(Icons.minimize_rounded, color: AppTheme.onSurfaceVariant, size: 20),
               ),
             ),
             
@@ -811,7 +998,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Icon(Icons.crop_square_rounded, color: context.theme.onSurfaceVariant, size: 18),
+                child: Icon(Icons.crop_square_rounded, color: AppTheme.onSurfaceVariant, size: 18),
               ),
             ),
             
@@ -820,7 +1007,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
               onTap: () async => await windowManager.hide(),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Icon(Icons.close_rounded, color: context.theme.onSurfaceVariant, size: 20),
+                child: Icon(Icons.close_rounded, color: AppTheme.onSurfaceVariant, size: 20),
               ),
             ),
           ],
@@ -837,37 +1024,37 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
     switch (ext) {
       case 'exe':
       case 'msi':
-        icon = Icons.settings_applications; color = context.theme.accentRed; break;
+        icon = Icons.settings_applications; color = AppTheme.accentRed; break;
       case 'apk':
-        icon = Icons.android; color = context.theme.tertiaryContainer; break;
+        icon = Icons.android; color = AppTheme.tertiaryContainer; break;
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
       case 'webp':
-        icon = Icons.image; color = context.theme.secondary; break;
+        icon = Icons.image; color = AppTheme.secondary; break;
       case 'mp4':
       case 'mkv':
       case 'avi':
-        icon = Icons.video_file; color = context.theme.secondaryContainer; break;
+        icon = Icons.video_file; color = AppTheme.secondaryContainer; break;
       case 'mp3':
       case 'wav':
-        icon = Icons.audio_file; color = context.theme.tertiaryContainer; break;
+        icon = Icons.audio_file; color = AppTheme.tertiaryContainer; break;
       case 'pdf':
-        icon = Icons.picture_as_pdf; color = context.theme.accentRed; break;
+        icon = Icons.picture_as_pdf; color = AppTheme.accentRed; break;
       case 'zip':
       case 'rar':
       case '7z':
-        icon = Icons.folder_zip; color = context.theme.outline; break;
+        icon = Icons.folder_zip; color = AppTheme.outline; break;
       default:
-        icon = Icons.insert_drive_file; color = context.theme.primary; break;
+        icon = Icons.insert_drive_file; color = AppTheme.primary; break;
     }
     
     return Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, color: color, size: 24),
@@ -896,9 +1083,9 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.photo_library_outlined, size: 64, color: context.theme.outline.withOpacity(0.3)),
+            Icon(Icons.photo_library_outlined, size: 64, color: AppTheme.outline.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
-            Text('Telefondan henüz fotoğraf\ngönderilmedi.', textAlign: TextAlign.center, style: TextStyle(color: context.theme.outline, height: 1.5)),
+            Text('Telefondan henüz fotoğraf\ngönderilmedi.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.outline, height: 1.5)),
           ],
         ),
       );
@@ -961,14 +1148,14 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isActive ? context.theme.surfaceContainerHighest.withOpacity(0.5) : Colors.transparent,
+          color: isActive ? AppTheme.surfaceContainerHighest.withValues(alpha: 0.5) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isActive ? context.theme.primary : context.theme.onSurfaceVariant),
+            Icon(icon, color: isActive ? AppTheme.primary : AppTheme.onSurfaceVariant),
             const SizedBox(width: 16),
-            Text(label, style: TextStyle(color: isActive ? context.theme.onSurface : context.theme.onSurfaceVariant, fontWeight: FontWeight.w500)),
+            Text(label, style: TextStyle(color: isActive ? AppTheme.onSurface : AppTheme.onSurfaceVariant, fontWeight: FontWeight.w500)),
           ]
         )
       )
@@ -976,9 +1163,11 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
   }
 
   Widget _buildSidebar() {
-    return Container(
+    return GlassContainer(
       width: 250,
-      color: context.theme.surfaceContainerLow,
+      blur: 20,
+      glassColor: AppTheme.surfaceContainerLow.withValues(alpha: 0.5),
+      border: Border(right: BorderSide(color: AppTheme.outlineVariant.withValues(alpha: 0.2))),
       child: Column(
         children: [
           const SizedBox(height: 16),
@@ -993,8 +1182,8 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('v2.4.0', style: TextStyle(color: context.theme.outline, fontSize: 10)),
-                Container(width: 8, height: 8, decoration: BoxDecoration(color: context.theme.tertiaryContainer, shape: BoxShape.circle, boxShadow: [BoxShadow(color: context.theme.tertiaryContainer.withOpacity(0.6), blurRadius: 8)])),
+                Text('v2.4.0', style: TextStyle(color: AppTheme.outline, fontSize: 10)),
+                Container(width: 8, height: 8, decoration: BoxDecoration(color: AppTheme.tertiaryContainer, shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.tertiaryContainer.withValues(alpha: 0.6), blurRadius: 8)])),
               ]
             )
           )
@@ -1013,13 +1202,13 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 20),
-            Text(_statusMessage, textAlign: TextAlign.center, style: TextStyle(color: context.theme.accentRed)),
+            Text(_statusMessage, textAlign: TextAlign.center, style: TextStyle(color: AppTheme.accentRed)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _startServer,
               style: ElevatedButton.styleFrom(
-                backgroundColor: context.theme.primaryContainer,
-                foregroundColor: context.theme.background,
+                backgroundColor: AppTheme.primaryContainer,
+                foregroundColor: AppTheme.background,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
               child: const Text('Yeniden Dene'),
@@ -1037,10 +1226,10 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Telefon Bağlantısı', style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: context.theme.onSurface, letterSpacing: -1)),
+              Text('Telefon Bağlantısı', style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: AppTheme.onSurface, letterSpacing: -1)),
               const SizedBox(height: 8),
               Text('Sürükle bırak ile anında dosya paylaşın. Cihazınızı komuta merkezine entegre etmek için eşleştirin.', 
-                   style: TextStyle(fontSize: 16, color: context.theme.onSurfaceVariant), textAlign: TextAlign.center),
+                   style: TextStyle(fontSize: 16, color: AppTheme.onSurfaceVariant), textAlign: TextAlign.center),
               const SizedBox(height: 48),
               
               SizedBox(
@@ -1051,19 +1240,18 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                     // QR Panel
                     Expanded(
                       flex: 3,
-                      child: Container(
+                      child: GlassContainer(
                         padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: context.theme.surfaceContainer.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: context.theme.outlineVariant.withOpacity(0.5)),
-                        ),
+                        glassColor: AppTheme.surfaceContainer.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.5)),
+                        blur: 15,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
                               padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.theme.primary.withOpacity(0.2), width: 4)),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2), width: 4)),
                               child: QrImageView(
                                 data: url,
                                 version: QrVersions.auto,
@@ -1075,16 +1263,16 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                               decoration: BoxDecoration(
-                                color: context.theme.surfaceContainerHighest,
+                                color: AppTheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(32),
-                                border: Border.all(color: context.theme.outlineVariant.withOpacity(0.3)),
+                                border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.3)),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.qr_code_scanner, color: context.theme.primary),
+                                  Icon(Icons.qr_code_scanner, color: AppTheme.primary),
                                   const SizedBox(width: 12),
-                                  Flexible(child: Text('Telefon kameranızdan QR kodu okutun', style: TextStyle(color: context.theme.onSurfaceVariant, fontSize: 14))),
+                                  Flexible(child: Text('Telefon kameranızdan QR kodu okutun', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 14))),
                                 ]
                               )
                             )
@@ -1100,13 +1288,12 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                         children: [
                           // Status Card
                           Expanded(
-                            child: Container(
+                            child: GlassContainer(
                               padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: context.theme.surfaceLow,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.theme.surfaceContainerHighest),
-                              ),
+                              glassColor: AppTheme.surfaceLow.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppTheme.surfaceContainerHighest.withValues(alpha: 0.5)),
+                              blur: 15,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1114,20 +1301,20 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text('STATUS', style: TextStyle(color: context.theme.outline, fontSize: 12, letterSpacing: 2)),
+                                      Text('STATUS', style: TextStyle(color: AppTheme.outline, fontSize: 12, letterSpacing: 2)),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: context.theme.surfaceContainerHighest,
+                                          color: AppTheme.surfaceContainerHighest,
                                           borderRadius: BorderRadius.circular(16),
-                                          border: Border.all(color: context.theme.outlineVariant.withOpacity(0.5)),
+                                          border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.5)),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Container(width: 8, height: 8, decoration: BoxDecoration(color: _connectedDevice != null ? context.theme.tertiaryContainer : context.theme.outline, shape: BoxShape.circle)),
+                                            Container(width: 8, height: 8, decoration: BoxDecoration(color: _connectedDevice != null ? AppTheme.tertiaryContainer : AppTheme.outline, shape: BoxShape.circle)),
                                             const SizedBox(width: 8),
-                                            Text(_connectedDevice != null ? 'Connected' : 'Waiting', style: TextStyle(color: context.theme.onSurfaceVariant, fontSize: 10)),
+                                            Text(_connectedDevice != null ? 'Connected' : 'Waiting', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10)),
                                           ]
                                         )
                                       )
@@ -1138,16 +1325,16 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                                     children: [
                                       Container(
                                         width: 48, height: 48,
-                                        decoration: BoxDecoration(color: context.theme.surfaceContainer, borderRadius: BorderRadius.circular(24), border: Border.all(color: context.theme.outlineVariant.withOpacity(0.3))),
-                                        child: Icon(Icons.smartphone, color: _connectedDevice != null ? context.theme.tertiaryContainer : context.theme.outline),
+                                        decoration: BoxDecoration(color: AppTheme.surfaceContainer, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.outlineVariant.withValues(alpha: 0.3))),
+                                        child: Icon(Icons.smartphone, color: _connectedDevice != null ? AppTheme.tertiaryContainer : AppTheme.outline),
                                       ),
                                       const SizedBox(width: 16),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(_connectedDevice != null ? '${_connectedDevice!['device']}' : 'No Device', style: TextStyle(color: context.theme.onSurface, fontSize: 20, fontWeight: FontWeight.bold)),
-                                            Text(_connectedDevice != null ? 'Battery: ${_connectedDevice!['battery']}' : 'Awaiting pair request...', style: TextStyle(color: context.theme.outline, fontSize: 14)),
+                                            Text(_connectedDevice != null ? '${_connectedDevice!['device']}' : 'No Device', style: TextStyle(color: AppTheme.onSurface, fontSize: 20, fontWeight: FontWeight.bold)),
+                                            Text(_connectedDevice != null ? 'Battery: ${_connectedDevice!['battery']}' : 'Awaiting pair request...', style: TextStyle(color: AppTheme.outline, fontSize: 14)),
                                           ]
                                         ),
                                       )
@@ -1160,35 +1347,84 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                           const SizedBox(height: 12),
                           // Manual IP Card
                           Expanded(
-                            child: Container(
+                            child: GlassContainer(
                               padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: context.theme.surfaceLow,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.theme.surfaceContainerHighest),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('MANUAL OVERRIDE', style: TextStyle(color: context.theme.outline, fontSize: 12, letterSpacing: 2)),
-                                  const SizedBox(height: 16),
-                                  Text('Local IP Address', style: TextStyle(color: context.theme.onSurfaceVariant, fontSize: 14)),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: context.theme.outlineVariant)),
+                              glassColor: AppTheme.surfaceLow.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppTheme.surfaceContainerHighest.withValues(alpha: 0.5)),
+                              blur: 15,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('MANUAL OVERRIDE', style: TextStyle(color: AppTheme.outline, fontSize: 12, letterSpacing: 2)),
+                                    const SizedBox(height: 16),
+                                    Text('Local IP Address', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 14)),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        border: Border(bottom: BorderSide(color: AppTheme.outlineVariant)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.wifi_tethering, color: AppTheme.outline),
+                                          const SizedBox(width: 12),
+                                          Expanded(child: SelectableText(url, style: TextStyle(color: AppTheme.primary, fontSize: 16, fontWeight: FontWeight.bold))),
+                                        ]
+                                      )
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.wifi_tethering, color: context.theme.outline),
-                                        const SizedBox(width: 12),
-                                        Expanded(child: SelectableText(url, style: TextStyle(color: context.theme.primary, fontSize: 16, fontWeight: FontWeight.bold))),
-                                      ]
-                                    )
-                                  ),
-                                ]
+                                    const SizedBox(height: 16),
+                                    Text('Güvenlik Şifresi', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 14)),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        border: Border(bottom: BorderSide(color: AppTheme.outlineVariant)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.lock, color: AppTheme.outline),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _pwdController,
+                                              style: TextStyle(color: AppTheme.primary, fontSize: 16, fontWeight: FontWeight.bold),
+                                              decoration: InputDecoration(
+                                                border: InputBorder.none,
+                                                isDense: true,
+                                                hintText: 'Şifre Girin',
+                                                hintStyle: TextStyle(color: AppTheme.outline),
+                                              ),
+                                              onSubmitted: (val) async {
+                                                final prefs = await SharedPreferences.getInstance();
+                                                await prefs.setString('web_password', val);
+                                                _savedPassword = val;
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Şifre güncellendi')));
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.save, color: AppTheme.primary, size: 20),
+                                            tooltip: 'Şifreyi Kaydet',
+                                            onPressed: () async {
+                                              final val = _pwdController.text;
+                                              final prefs = await SharedPreferences.getInstance();
+                                              await prefs.setString('web_password', val);
+                                              _savedPassword = val;
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Şifre güncellendi')));
+                                              }
+                                            },
+                                          ),
+                                        ]
+                                      )
+                                    ),
+                                  ]
+                                ),
                               )
                             )
                           ),
@@ -1212,13 +1448,13 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+            border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Paylaşılan Dosyalar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: context.theme.onSurface)),
-              Text('${_sharedFiles.length} öğe', style: TextStyle(color: context.theme.onSurfaceVariant, fontSize: 14)),
+              Text('Paylaşılan Dosyalar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.onSurface)),
+              Text('${_sharedFiles.length} öğe', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 14)),
             ],
           ),
         ),
@@ -1228,9 +1464,9 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.upload_file_rounded, size: 64, color: context.theme.outline.withOpacity(0.3)),
+                    Icon(Icons.upload_file_rounded, size: 64, color: AppTheme.outline.withValues(alpha: 0.3)),
                     const SizedBox(height: 16),
-                    Text('Dosyaları eklemek için\nburaya sürükleyin', textAlign: TextAlign.center, style: TextStyle(color: context.theme.outline, height: 1.5)),
+                    Text('Dosyaları eklemek için\nburaya sürükleyin', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.outline, height: 1.5)),
                   ],
                 ),
               )
@@ -1262,9 +1498,9 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: context.theme.surfaceLow,
+                        color: AppTheme.surfaceLow,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                       ),
                       child: Stack(
                         children: [
@@ -1293,7 +1529,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                                 const SizedBox(height: 4),
                                 Text(
                                   _formatBytes(file.lengthSync()),
-                                  style: TextStyle(fontSize: 11, color: context.theme.onSurfaceVariant),
+                                  style: TextStyle(fontSize: 11, color: AppTheme.onSurfaceVariant),
                                 ),
                               ],
                           ),
@@ -1304,12 +1540,12 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: (isFromPhone ? context.theme.accentGreen : context.theme.primaryContainer).withOpacity(0.15),
+                              color: (isFromPhone ? AppTheme.accentGreen : AppTheme.primaryContainer).withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               isFromPhone ? Icons.download_rounded : Icons.upload_rounded,
-                              color: isFromPhone ? context.theme.accentGreen : context.theme.primaryContainer,
+                              color: isFromPhone ? AppTheme.accentGreen : AppTheme.primaryContainer,
                               size: 14,
                             ),
                           ),
@@ -1368,7 +1604,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
             child: Stack(
               children: [
                 Container(
-                  color: context.theme.background,
+                  color: Colors.transparent,
                   child: Row(
                     children: [
                       if (!_isCompact) _buildSidebar(),
@@ -1382,7 +1618,7 @@ class _PhoneLinkAppState extends State<PhoneLinkApp> {
                 // Drag & Drop Overlay
                 if (_isDragging)
                   Container(
-                    color: context.theme.primaryContainer.withOpacity(0.9),
+                    color: AppTheme.primaryContainer.withValues(alpha: 0.9),
                     child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,

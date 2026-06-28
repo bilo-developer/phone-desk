@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Deck Shortcuts - Phone Desk</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed": "#ffdbcc",
+                      "glass-surface": "rgba(28, 30, 35, 0.6)",
+                      "primary": "#adc6ff",
+                      "on-error": "#690005",
+                      "primary-fixed-dim": "#adc6ff",
+                      "primary-fixed": "#d8e2ff",
+                      "on-tertiary-container": "#4c1a00",
+                      "on-secondary-fixed-variant": "#7200a3",
+                      "outline": "#8c909f",
+                      "secondary": "#e8b3ff",
+                      "on-primary-container": "#00285c",
+                      "on-background": "#e2e2e9",
+                      "surface-container": "#1e2025",
+                      "on-tertiary-fixed": "#351000",
+                      "surface-container-lowest": "#0c0e13",
+                      "on-surface-variant": "#c2c6d6",
+                      "surface-container-low": "#1a1b21",
+                      "on-secondary": "#510074",
+                      "on-secondary-fixed": "#310048",
+                      "inverse-primary": "#005bc1",
+                      "secondary-fixed-dim": "#e8b3ff",
+                      "on-secondary-container": "#e5a9ff",
+                      "on-primary": "#002e69",
+                      "secondary-container": "#7d01b1",
+                      "surface": "#111318",
+                      "outline-glow": "rgba(255, 255, 255, 0.1)",
+                      "on-tertiary": "#571e00",
+                      "primary-container": "#4b8eff",
+                      "error-container": "#93000a",
+                      "surface-container-high": "#282a2f",
+                      "on-primary-fixed": "#001a41",
+                      "surface-tint": "#adc6ff",
+                      "on-error-container": "#ffdad6",
+                      "input-glass": "rgba(255, 255, 255, 0.05)",
+                      "inverse-surface": "#e2e2e9",
+                      "on-primary-fixed-variant": "#004494",
+                      "inverse-on-surface": "#2e3036",
+                      "surface-container-highest": "#33353a",
+                      "outline-variant": "#424753",
+                      "on-tertiary-fixed-variant": "#7c2e00",
+                      "tertiary-fixed-dim": "#ffb695",
+                      "surface-dim": "#111318",
+                      "secondary-fixed": "#f6d9ff",
+                      "background": "#111318",
+                      "on-surface": "#e2e2e9",
+                      "tertiary-container": "#ef6719",
+                      "surface-bright": "#37393f",
+                      "surface-variant": "#33353a",
+                      "tertiary": "#ffb695",
+                      "error": "#ffb4ab"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "stack-gap": "16px",
+                      "container-padding": "20px",
+                      "touch-target": "44px",
+                      "grid-gutter": "12px"
+              },
+              "fontFamily": {
+                      "label-lg": ["Inter"],
+                      "headline-xl-mobile": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-xl": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "label-lg": ["13px", {"lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                      "headline-xl-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500"}],
+                      "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            },
+          }
+        }
+    </script>
+<style>
+        body {
+            background-color: #111318;
+            color: #e2e2e9;
+            overflow-x: hidden;
+        }
+        
+        .liquid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(75, 142, 255, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(232, 179, 255, 0.1) 0%, transparent 50%);
+            filter: blur(60px);
+            mix-blend-mode: screen;
+        }
+
+        .glass-card {
+            background: rgba(28, 30, 35, 0.6);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .liquid-tile {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .liquid-tile::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.06), transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .liquid-tile:active {
+            transform: scale(0.95);
+        }
+
+        .liquid-tile:hover::before {
+            opacity: 1;
+        }
+        
+        .bg-preview {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.4;
+            filter: blur(10px);
+            transform: scale(1.1);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .fab-gradient {
+            background: linear-gradient(180deg, #4b8eff 0%, #005bc1 100%);
+            box-shadow: 0 8px 32px rgba(75, 142, 255, 0.4);
+        }
+        
+        /* Hide scrollbar for grid */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col items-center">
+<div class="liquid-bg"></div>
+<!-- TopAppBar JSON execution -->
+<header class="fixed top-0 w-full z-50 backdrop-blur-[40px] bg-glass-surface border-b border-white/10 flex justify-between items-center px-container-padding h-touch-target shadow-none">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 text-on-surface-variant flex items-center justify-center w-touch-target h-touch-target">
+<span class="material-symbols-outlined text-2xl" data-icon="settings_remote">settings_remote</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Remote Control</h1>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 text-on-surface-variant flex items-center justify-center w-touch-target h-touch-target">
+<span class="material-symbols-outlined text-2xl" data-icon="account_circle">account_circle</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full max-w-[448px] px-container-padding pt-[80px] pb-[120px] flex-1 flex flex-col no-scrollbar">
+<!-- Deck Grid (3x4 Layout) -->
+<div class="grid grid-cols-3 gap-grid-gutter w-full mt-6">
+<!-- Tile 1: Netflix (Media) -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="bg-preview" data-alt="Abstract cinematic lighting with deep reds and intense contrast, reminiscent of a premium streaming service loading screen. Glossy, dark, and immersive atmosphere. High-tech minimal aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCxZZjwFjUA13RYcz4i6ie9xwT6_Y9J3qJ8MHrXrvrtOScFIiX5HI2IOYZeSJV1-nK7bbnRKfwYeN7b4lyXbMAzf92N2otm1cHnYt8sHUpf18clHA14gsz0FAVsj41cgjBcUtlv97y_lqvOkqCowHtutndLXb28ufrPqBgB2NZDZIZ2kC3Hld0BSf2XH5Z7WPODT12LltdkrDQTUzVujHQLvrwJq86M3CDTnwaoIMg_1nmagIWfQKWAtTJULgk_fUvWc81g8TYS8fG-')"></div>
+<div class="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md border border-white/10 group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-[#E50914] text-3xl" data-icon="movie" data-weight="fill" style="font-variation-settings: 'FILL' 1;">movie</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">Netflix</span>
+</button>
+<!-- Tile 2: YouTube -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="bg-preview" data-alt="A vibrant, blurred abstract composition featuring energetic splashes of bright red and soft white light against a deep dark background. The mood is dynamic and content-focused. Modern glassmorphism style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCOO6c7qTTApmu3q_dPk6lZ17VC0Q1W2JQIP2ofytChcCdezV9VkkqpzdHJKwWGIW6VCA3zhbeFwI1FcKK4bS3syrJbJSuq8BybqXPljURFuPqR1EMjWUhOZtOXDjeuqR0z8SzrOKIcn7H8OAtwkS-Z4xW-kQIFARdiPKG6NUX0vmGqSTHU5h-imWiQ2t41NjvxnO1EvVqnRGov5HeQ4YMD6NEUWn4R8uxHkVT7pupeUxvT0OJTwmwXEZBrJRGO8ZFy4CIJ0Hf_L4Eq')"></div>
+<div class="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md border border-white/10 group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-[#FF0000] text-3xl" data-icon="play_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">YouTube</span>
+</button>
+<!-- Tile 3: Spotify -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="bg-preview" data-alt="Smooth, flowing abstract waves of neon green and deep black blending seamlessly. The texture feels like liquid light in a dark room. Futuristic, sound-wave inspired aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAz8NYpcwleYjwVifA-6mfD_LAbxJw5ZoYBGvH4LXpp03n0mE8dcNcb0fNcG5_rSgqTuG1xcjjPqvknEzGxMTl9TvZnv_mD2cy-qtOAwNjoF_EEnyEtuO41wqm_E3LRlPyvApxiKYq6qSqnCbaQ9C3pYnRni2dljMPSqU7jECmUPZgrddxuHTyAegUOoqJ9baaVF3Lhx_riP5F6Lpzxr-ffc2wB-T3CJPwuESud27dyVY7EyEBfnVXSvwh8a7aRZee-EgnO9ahNfqDw')"></div>
+<div class="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md border border-white/10 group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-[#1DB954] text-3xl" data-icon="music_note" data-weight="fill" style="font-variation-settings: 'FILL' 1;">music_note</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">Spotify</span>
+</button>
+<!-- Tile 4: Mute -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors duration-300 text-on-surface-variant">
+<span class="material-symbols-outlined text-2xl" data-icon="volume_off">volume_off</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mute</span>
+</button>
+<!-- Tile 5: Play/Pause -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:bg-primary/20 transition-colors duration-300">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="pause_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">pause_circle</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary">Pause</span>
+</button>
+<!-- Tile 6: Vol Up -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-surface-bright transition-colors duration-300 text-on-surface">
+<span class="material-symbols-outlined text-2xl" data-icon="volume_up">volume_up</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Vol Up</span>
+</button>
+<!-- Tile 7: Lock Screen -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center border border-error/20 group-hover:bg-error/20 transition-colors duration-300">
+<span class="material-symbols-outlined text-error text-2xl" data-icon="lock">lock</span>
+</div>
+<span class="font-label-sm text-label-sm text-error">Lock Mac</span>
+</button>
+<!-- Tile 8: Screenshot -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-surface-bright transition-colors duration-300 text-on-surface">
+<span class="material-symbols-outlined text-2xl" data-icon="screenshot_monitor">screenshot_monitor</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Snip</span>
+</button>
+<!-- Tile 9: Brightness -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-surface-bright transition-colors duration-300 text-on-surface">
+<span class="material-symbols-outlined text-2xl" data-icon="brightness_6">brightness_6</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Display</span>
+</button>
+<!-- Tile 10: Sleep -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-surface-bright transition-colors duration-300 text-on-surface">
+<span class="material-symbols-outlined text-2xl" data-icon="bedtime">bedtime</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sleep</span>
+</button>
+<!-- Tile 11: Terminal -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-surface-bright transition-colors duration-300 text-secondary">
+<span class="material-symbols-outlined text-2xl" data-icon="terminal">terminal</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Terminal</span>
+</button>
+<!-- Tile 12: Empty Slot -->
+<button class="liquid-tile aspect-square flex flex-col items-center justify-center gap-2 p-2 border-dashed border-2 border-outline-variant hover:border-primary/50 group">
+<div class="w-12 h-12 flex items-center justify-center text-outline-variant group-hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+</div>
+</button>
+</div>
+</main>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed right-6 bottom-[100px] w-14 h-14 rounded-full fab-gradient flex items-center justify-center z-[60] active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-white text-3xl" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar JSON execution (Deck is active, mapped to trackpad semantic) -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-[448px] rounded-full backdrop-blur-[40px] z-50 bg-glass-surface border border-white/10 shadow-lg shadow-primary/20 flex justify-around items-center py-2 px-4 md:hidden">
+<!-- Active: trackpad (Represents the Deck/Remote) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full w-11 h-11 active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="trackpad" data-weight="fill" style="font-variation-settings: 'FILL' 1;">backpack</span>
+</a>
+<!-- Inactive items -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="monitor">monitor</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="keyboard_command_key">keyboard_command_key</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="settings_suggest">settings_suggest</span>
+</a>
+</nav>
+<script>
+        // Hover effect for liquid tiles to track mouse position for the radial gradient glow
+        document.querySelectorAll('.liquid-tile').forEach(tile => {
+            tile.addEventListener('mousemove', e => {
+                const rect = tile.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                tile.style.setProperty('--mouse-x', `${x}px`);
+                tile.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body></html>

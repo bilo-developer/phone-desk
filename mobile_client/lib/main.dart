@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'screens/login_screen.dart';
+import 'theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,20 +15,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Phone Desk Client',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: const Color(0xFF0F172A),
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1E293B),
-          elevation: 0,
-        ),
-        colorScheme: const ColorScheme.dark(
-          primary: Colors.blueAccent,
-          surface: Color(0xFF1E293B),
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.themeData,
+      builder: (context, child) {
+        return LiquidGlassLayer(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: const LoginScreen(),
     );
   }

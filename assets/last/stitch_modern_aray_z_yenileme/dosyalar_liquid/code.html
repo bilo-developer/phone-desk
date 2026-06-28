@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phone Desk - File Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdbcc",
+                        "glass-surface": "rgba(28, 30, 35, 0.6)",
+                        "primary": "#adc6ff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-container": "#4c1a00",
+                        "on-secondary-fixed-variant": "#7200a3",
+                        "outline": "#8c909f",
+                        "secondary": "#e8b3ff",
+                        "on-primary-container": "#00285c",
+                        "on-background": "#e2e2e9",
+                        "surface-container": "#1e2025",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-container-lowest": "#0c0e13",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-low": "#1a1b21",
+                        "on-secondary": "#510074",
+                        "on-secondary-fixed": "#310048",
+                        "inverse-primary": "#005bc1",
+                        "secondary-fixed-dim": "#e8b3ff",
+                        "on-secondary-container": "#e5a9ff",
+                        "on-primary": "#002e69",
+                        "secondary-container": "#7d01b1",
+                        "surface": "#111318",
+                        "outline-glow": "rgba(255, 255, 255, 0.1)",
+                        "on-tertiary": "#571e00",
+                        "primary-container": "#4b8eff",
+                        "error-container": "#93000a",
+                        "surface-container-high": "#282a2f",
+                        "on-primary-fixed": "#001a41",
+                        "surface-tint": "#adc6ff",
+                        "on-error-container": "#ffdad6",
+                        "input-glass": "rgba(255, 255, 255, 0.05)",
+                        "inverse-surface": "#e2e2e9",
+                        "on-primary-fixed-variant": "#004494",
+                        "inverse-on-surface": "#2e3036",
+                        "surface-container-highest": "#33353a",
+                        "outline-variant": "#424753",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "surface-dim": "#111318",
+                        "secondary-fixed": "#f6d9ff",
+                        "background": "#111318",
+                        "on-surface": "#e2e2e9",
+                        "tertiary-container": "#ef6719",
+                        "surface-bright": "#37393f",
+                        "surface-variant": "#33353a",
+                        "tertiary": "#ffb695",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "stack-gap": "16px",
+                        "container-padding": "20px",
+                        "touch-target": "44px",
+                        "grid-gutter": "12px"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Inter"],
+                        "headline-xl-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-xl-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #111318;
+            color: #e2e2e9;
+            overflow-x: hidden;
+        }
+
+        .fluid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(75, 142, 255, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(232, 179, 255, 0.1) 0%, transparent 50%);
+            filter: blur(80px);
+            mix-blend-mode: screen;
+        }
+
+        .glass-card {
+            background: rgba(28, 30, 35, 0.6);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .input-glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-glow {
+            box-shadow: 0 0 10px rgba(75, 142, 255, 0.5);
+        }
+
+        .fab-glow {
+            box-shadow: 0 4px 20px rgba(75, 142, 255, 0.4);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex justify-center">
+<div class="fluid-bg"></div>
+<div class="w-full max-w-[448px] relative pb-[100px] flex flex-col">
+<!-- TopAppBar -->
+<nav aria-label="Top App Bar" class="fixed top-0 w-full max-w-[448px] z-50 backdrop-blur-[40px] bg-glass-surface flex justify-between items-center px-container-padding h-touch-target border-b border-white/10">
+<button aria-label="Menu" class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="settings_remote">settings_remote</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Remote Control</h1>
+<button aria-label="Profile" class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 px-container-padding mt-[80px] flex flex-col gap-stack-gap">
+<!-- Breadcrumb / Path -->
+<div class="input-glass rounded-lg px-4 py-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="font-body-md text-body-md text-on-surface-variant truncate">C:\Users\Desktop\Files</span>
+</div>
+<!-- Storage Indicator -->
+<div class="glass-card rounded-xl p-4 flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="font-label-lg text-label-lg text-on-surface">Storage</span>
+<span class="font-label-sm text-label-sm text-primary">12.4 GB / 64 GB</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full progress-glow" style="width: 19.3%;"></div>
+</div>
+</div>
+<!-- File List -->
+<div class="flex flex-col gap-unit mt-2">
+<h2 class="font-label-lg text-label-lg text-on-surface-variant px-2 mb-2">Files</h2>
+<!-- File Item 1 -->
+<div class="glass-card rounded-xl p-3 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">image</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">app_icon.ico</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Image • 256 KB</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+<!-- File Item 2 -->
+<div class="glass-card rounded-xl p-3 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">folder_zip</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">PhoneDeskClient.zip</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Archive • 45.2 MB</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+<!-- File Item 3 -->
+<div class="glass-card rounded-xl p-3 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">description</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">config.json</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Document • 12 KB</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+<!-- File Item 4 -->
+<div class="glass-card rounded-xl p-3 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">image</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">screenshot.png</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Image • 1.2 MB</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button aria-label="Add File" class="fixed bottom-24 right-container-padding w-14 h-14 rounded-full bg-gradient-to-b from-[#4b8eff] to-[#005bc1] text-white flex items-center justify-center fab-glow hover:scale-95 transition-transform duration-200 z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav aria-label="Bottom Navigation" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-[448px] rounded-full backdrop-blur-[40px] z-50 bg-glass-surface flex justify-around items-center py-2 px-4 border border-white/10 shadow-lg shadow-primary/20 md:hidden">
+<button aria-label="Trackpad" class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="trackpad">backpack</span>
+</button>
+<button aria-label="Monitor" class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="monitor">monitor</span>
+</button>
+<button aria-label="Files" class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full w-11 h-11 hover:bg-white/5 transition-colors active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="folder_open" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+</button>
+<button aria-label="Keyboard" class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="keyboard_command_key">keyboard_command_key</span>
+</button>
+<button aria-label="Settings" class="flex flex-col items-center justify-center text-on-surface-variant w-11 h-11 hover:bg-white/5 transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="settings_suggest">settings_suggest</span>
+</button>
+</nav>
+</div>
+</body></html>

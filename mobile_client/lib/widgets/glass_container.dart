@@ -1,5 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import '../theme.dart';
 
 class GlassContainer extends StatelessWidget {
   final Widget child;
@@ -21,7 +22,7 @@ class GlassContainer extends StatelessWidget {
     this.margin,
     this.borderRadius = 24.0,
     this.isFake = false,
-    this.opacity = 0.1,
+    this.opacity = 0.6,
     this.borderColor,
   });
 
@@ -32,30 +33,20 @@ class GlassContainer extends StatelessWidget {
       height: height,
       padding: padding,
       decoration: BoxDecoration(
-        border: Border.all(color: borderColor ?? Colors.white.withAlpha((opacity * 255).toInt()), width: 1.0),
+        color: AppTheme.glassSurface,
+        border: Border.all(color: borderColor ?? AppTheme.outlineGlow, width: 1.0),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: child,
     );
 
-    final shape = LiquidRoundedSuperellipse(borderRadius: borderRadius);
-
-    Widget glassWidget;
-    if (isFake) {
-      glassWidget = FakeGlass(
-        shape: shape,
-        settings: const LiquidGlassSettings(
-          blur: 40,
-          glassColor: Color.fromRGBO(28, 30, 35, 0.6),
-        ),
+    Widget glassWidget = ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
         child: content,
-      );
-    } else {
-      glassWidget = LiquidGlass(
-        shape: shape,
-        child: content,
-      );
-    }
+      ),
+    );
 
     if (margin != null) {
       return Padding(padding: margin!, child: glassWidget);

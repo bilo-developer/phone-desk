@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -128,6 +129,19 @@ class ApiService {
     }
   }
 
+  Future<bool> deleteDeckButton(String profileId, String buttonId) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/deck/delete-button'),
+        headers: headers,
+        body: jsonEncode({'profileId': profileId, 'buttonId': buttonId}),
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> updatePassword(String newPassword) async {
     try {
       final res = await http.post(
@@ -147,12 +161,35 @@ class ApiService {
     }
   }
 
-  String screenStreamUrl([String? displayId]) {
-    String url = '$baseUrl/screen/frame?pwd=$password';
+  String screenStreamUrl([String? displayId, int fps = 15, int res = 1080]) {
+    String url = '$baseUrl/screen/frame?pwd=$password&fps=$fps&res=$res';
     if (displayId != null && displayId.isNotEmpty) {
       url += '&displayId=$displayId';
     }
     return url;
+  }
+
+  String screenSnapshotUrl([String? displayId]) {
+    String url = '$baseUrl/screen/snapshot?pwd=$password&t=${DateTime.now().millisecondsSinceEpoch}';
+    if (displayId != null && displayId.isNotEmpty) {
+      url += '&displayId=${Uri.encodeComponent(displayId)}';
+    }
+    return url;
+  }
+
+  Future<void> sendMouseAbsolute(double xPct, double yPct, {bool click = false}) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/mouse'),
+        headers: headers,
+        body: jsonEncode({
+          'action': 'absolute',
+          'x': xPct,
+          'y': yPct,
+          'click': click,
+        }),
+      );
+    } catch (_) {}
   }
 
   Future<List<dynamic>> getDisplays() async {
@@ -160,8 +197,12 @@ class ApiService {
       final res = await http.get(Uri.parse('$baseUrl/displays'), headers: headers);
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
+      } else {
+        debugPrint('getDisplays error: ${res.statusCode} - ${res.body}');
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('getDisplays exception: $e');
+    }
     return [];
   }
   
@@ -169,5 +210,148 @@ class ApiService {
     try {
       await http.post(Uri.parse('$baseUrl/screen/stop'), headers: headers);
     } catch (_) {}
+  }
+
+  // ===== SYSTEM INFO =====
+
+  Future<Map<String, dynamic>> getSystemInfo() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/system/info'), headers: headers)
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  Future<List<dynamic>> getProcesses() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/system/processes'), headers: headers)
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  Future<bool> killProcess(int pid) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/system/kill-process'),
+        headers: headers,
+        body: jsonEncode({'pid': pid}),
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ===== CLIPBOARD =====
+
+  Future<String> getClipboard() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/clipboard'), headers: headers);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['text'] ?? '';
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  Future<bool> setClipboard(String text) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/clipboard'),
+        headers: headers,
+        body: jsonEncode({'text': text}),
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ===== KEYBOARD =====
+
+  Future<void> sendKeyboard(String type, String value) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/keyboard'),
+        headers: headers,
+        body: jsonEncode({'type': type, 'value': value}),
+      );
+    } catch (_) {}
+  }
+
+  // ===== POWER =====
+
+  Future<bool> systemPower(String action) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/system/power'),
+        headers: headers,
+        body: jsonEncode({'action': action}),
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ===== VOLUME =====
+
+  Future<int> getVolume() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/system/volume'), headers: headers);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['volume'] ?? 50;
+      }
+    } catch (_) {}
+    return 50;
+  }
+
+  Future<bool> setVolume(int level) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/system/volume'),
+        headers: headers,
+        body: jsonEncode({'volume': level}),
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ===== BRIGHTNESS =====
+
+  Future<bool> setBrightness(int level) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/system/brightness'),
+        headers: headers,
+        body: jsonEncode({'brightness': level}),
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ===== NOTIFICATIONS =====
+
+  Future<List<dynamic>> getNotifications() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/notifications'), headers: headers);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (_) {}
+    return [];
   }
 }

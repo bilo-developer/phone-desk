@@ -6,12 +6,12 @@ import 'package:flutter/foundation.dart';
 typedef MouseEventC = Void Function(Int32 dwFlags, Int32 dx, Int32 dy, Int32 dwData, Int32 dwExtraInfo);
 typedef MouseEventDart = void Function(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 
-const int MOUSEEVENTF_MOVE = 0x0001;
-const int MOUSEEVENTF_LEFTDOWN = 0x0002;
-const int MOUSEEVENTF_LEFTUP = 0x0004;
-const int MOUSEEVENTF_RIGHTDOWN = 0x0008;
-const int MOUSEEVENTF_RIGHTUP = 0x0010;
-const int MOUSEEVENTF_WHEEL = 0x0800;
+const int mouseEventfMove = 0x0001;
+const int mouseEventfLeftdown = 0x0002;
+const int mouseEventfLeftup = 0x0004;
+const int mouseEventfRightdown = 0x0008;
+const int mouseEventfRightup = 0x0010;
+const int mouseEventfWheel = 0x0800;
 
 /// Simulates keyboard input and system actions on Windows via PowerShell
 class KeySimulator {
@@ -58,21 +58,27 @@ class KeySimulator {
       switch (action) {
         case 'move':
           if (dx != null && dy != null) {
-            mouseEvent(MOUSEEVENTF_MOVE, dx, dy, 0, 0);
+            mouseEvent(mouseEventfMove, dx, dy, 0, 0);
           }
           break;
         case 'left_click':
-          mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-          mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+          mouseEvent(mouseEventfLeftdown, 0, 0, 0, 0);
+          mouseEvent(mouseEventfLeftup, 0, 0, 0, 0);
+          break;
+        case 'left_down':
+          mouseEvent(mouseEventfLeftdown, 0, 0, 0, 0);
+          break;
+        case 'left_up':
+          mouseEvent(mouseEventfLeftup, 0, 0, 0, 0);
           break;
         case 'right_click':
-          mouseEvent(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
-          mouseEvent(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+          mouseEvent(mouseEventfRightdown, 0, 0, 0, 0);
+          mouseEvent(mouseEventfRightup, 0, 0, 0, 0);
           break;
         case 'scroll':
           if (dy != null) {
             // dy is inverted for scrolling. positive dy means scrolling down in JS, but WHEEL expects negative for down.
-            mouseEvent(MOUSEEVENTF_WHEEL, 0, 0, -dy, 0);
+            mouseEvent(mouseEventfWheel, 0, 0, -dy, 0);
           }
           break;
       }
@@ -93,12 +99,12 @@ class KeySimulator {
       int absX = (xPct * 65535).round();
       int absY = (yPct * 65535).round();
       
-      int flags = MOUSEEVENTF_MOVE | 0x8000;
+      int flags = mouseEventfMove | 0x8000;
       mouseEvent(flags, absX, absY, 0, 0);
       
       if (click) {
-        mouseEvent(MOUSEEVENTF_LEFTDOWN | 0x8000, absX, absY, 0, 0);
-        mouseEvent(MOUSEEVENTF_LEFTUP | 0x8000, absX, absY, 0, 0);
+        mouseEvent(mouseEventfLeftdown | 0x8000, absX, absY, 0, 0);
+        mouseEvent(mouseEventfLeftup | 0x8000, absX, absY, 0, 0);
       }
     } catch (e) {
       debugPrint('Mouse FFI absolute error: $e');
@@ -384,17 +390,28 @@ Start-Sleep -Milliseconds 50
   /// Launch Netflix and dim the other screen using a borderless black PowerShell form
   Future<bool> launchMovieMode(String actionData) async {
     int targetScreenIndex = 0;
+    String targetDeviceName = '';
     int? profileIndex;
     String? pin;
 
     try {
       if (actionData.startsWith('{')) {
         final data = jsonDecode(actionData);
-        targetScreenIndex = int.tryParse(data['screen']?.toString() ?? '0') ?? 0;
+        if (data['screen'] != null) {
+           if (int.tryParse(data['screen'].toString()) != null) {
+              targetScreenIndex = int.parse(data['screen'].toString());
+           } else {
+              targetDeviceName = data['screen'].toString();
+           }
+        }
         profileIndex = int.tryParse(data['profileIndex']?.toString() ?? '');
         pin = data['pin']?.toString();
       } else {
-        targetScreenIndex = int.tryParse(actionData) ?? 0;
+        if (int.tryParse(actionData) != null) {
+          targetScreenIndex = int.parse(actionData);
+        } else {
+          targetDeviceName = actionData;
+        }
       }
     } catch (_) {}
 
@@ -411,6 +428,14 @@ Add-Type -AssemblyName System.Windows.Forms
 \$screens = [System.Windows.Forms.Screen]::AllScreens
 if (\$screens.Length -le 1) { exit 0 }
 \$targetIdx = $targetScreenIndex
+if ("$targetDeviceName" -ne "") {
+    for (\$i = 0; \$i -lt \$screens.Length; \$i++) {
+        if (\$screens[\$i].DeviceName -eq "$targetDeviceName") {
+            \$targetIdx = \$i
+            break
+        }
+    }
+}
 if (\$targetIdx -lt 0 -or \$targetIdx -ge \$screens.Length) { \$targetIdx = 0 }
 
 \$forms = @()
@@ -436,6 +461,74 @@ foreach (\$f in \$forms) { \$f.Show() }
        debugPrint('Black screen script error: $e');
        throw e;
     });
+
+    // Move Netflix window to target screen asynchronously
+    final moveScript = '''
+Add-Type -AssemblyName System.Windows.Forms
+\$screens = [System.Windows.Forms.Screen]::AllScreens
+if (\$screens.Length -le 1) { exit 0 }
+\$targetIdx = $targetScreenIndex
+if ("$targetDeviceName" -ne "") {
+    for (\$i = 0; \$i -lt \$screens.Length; \$i++) {
+        if (\$screens[\$i].DeviceName -eq "$targetDeviceName") {
+            \$targetIdx = \$i
+            break
+        }
+    }
+}
+if (\$targetIdx -lt 0 -or \$targetIdx -ge \$screens.Length) { \$targetIdx = 0 }
+\$targetScreen = \$screens[\$targetIdx]
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class Win32Move {
+    [DllImport("user32.dll")]
+    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")]
+    public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern int GetWindowText(IntPtr hWnd, StringBuilder strText, int maxCount);
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
+
+    public static IntPtr FindNetflixWindow() {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((hWnd, lParam) => {
+            if (!IsWindowVisible(hWnd)) return true;
+            StringBuilder sb = new StringBuilder(256);
+            GetWindowText(hWnd, sb, sb.Capacity);
+            if (sb.ToString().Contains("Netflix") || sb.ToString().Contains("netflix")) {
+                found = hWnd;
+                return false; // Stop
+            }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+}
+"@
+
+# Wait up to 5 seconds for Netflix window to appear
+\$hwnd = [IntPtr]::Zero
+for (\$i = 0; \$i -lt 15; \$i++) {
+    Start-Sleep -Milliseconds 500
+    \$hwnd = [Win32Move]::FindNetflixWindow()
+    if (\$hwnd -ne [IntPtr]::Zero) { break }
+}
+
+if (\$hwnd -ne [IntPtr]::Zero) {
+    [Win32Move]::ShowWindow(\$hwnd, 1)
+    [Win32Move]::MoveWindow(\$hwnd, \$targetScreen.Bounds.X, \$targetScreen.Bounds.Y, 800, 600, \$true)
+    [Win32Move]::ShowWindow(\$hwnd, 3)
+}
+''';
+    Process.start('powershell', ['-WindowStyle', 'Hidden', '-Command', moveScript]);
+
 
     // Profile Auto-Login via Keyboard
     if (profileIndex != null) {
@@ -493,5 +586,41 @@ public class NetflixKB {
     }
 
     return true;
+  }
+
+  /// Type a single character via clipboard paste
+  Future<bool> typeChar(String char) async {
+    if (char.isEmpty) return false;
+    return await typeText(char);
+  }
+
+  /// Send a special key (enter, tab, esc, backspace, arrow keys, etc.)
+  Future<bool> sendSpecialKey(String key) async {
+    final vk = _getVirtualKeyCode(key.toLowerCase());
+    if (vk == null) return false;
+
+    final script = '''
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class SpecKey {
+  [DllImport("user32.dll")]
+  public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, UIntPtr dwExtraInfo);
+}
+"@
+[SpecKey]::keybd_event($vk, 0, 0, [UIntPtr]::Zero)
+Start-Sleep -Milliseconds 50
+[SpecKey]::keybd_event($vk, 0, 2, [UIntPtr]::Zero)
+''';
+
+    final result = await Process.run('powershell', [
+      '-NoProfile', '-NonInteractive', '-Command', script,
+    ]);
+    return result.exitCode == 0;
+  }
+
+  /// Send a key combination from keyboard input (e.g. ctrl+c, ctrl+v)
+  Future<bool> sendKeyCombination(String combo) async {
+    return await sendHotkey(combo);
   }
 }

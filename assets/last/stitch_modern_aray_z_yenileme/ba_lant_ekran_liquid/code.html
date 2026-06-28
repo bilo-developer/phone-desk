@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phone Desk - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed": "#ffdbcc",
+                        "glass-surface": "rgba(28, 30, 35, 0.6)",
+                        "primary": "#adc6ff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-container": "#4c1a00",
+                        "on-secondary-fixed-variant": "#7200a3",
+                        "outline": "#8c909f",
+                        "secondary": "#e8b3ff",
+                        "on-primary-container": "#00285c",
+                        "on-background": "#e2e2e9",
+                        "surface-container": "#1e2025",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-container-lowest": "#0c0e13",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-low": "#1a1b21",
+                        "on-secondary": "#510074",
+                        "on-secondary-fixed": "#310048",
+                        "inverse-primary": "#005bc1",
+                        "secondary-fixed-dim": "#e8b3ff",
+                        "on-secondary-container": "#e5a9ff",
+                        "on-primary": "#002e69",
+                        "secondary-container": "#7d01b1",
+                        "surface": "#111318",
+                        "outline-glow": "rgba(255, 255, 255, 0.1)",
+                        "on-tertiary": "#571e00",
+                        "primary-container": "#4b8eff",
+                        "error-container": "#93000a",
+                        "surface-container-high": "#282a2f",
+                        "on-primary-fixed": "#001a41",
+                        "surface-tint": "#adc6ff",
+                        "on-error-container": "#ffdad6",
+                        "input-glass": "rgba(255, 255, 255, 0.05)",
+                        "inverse-surface": "#e2e2e9",
+                        "on-primary-fixed-variant": "#004494",
+                        "inverse-on-surface": "#2e3036",
+                        "surface-container-highest": "#33353a",
+                        "outline-variant": "#424753",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "surface-dim": "#111318",
+                        "secondary-fixed": "#f6d9ff",
+                        "background": "#111318",
+                        "on-surface": "#e2e2e9",
+                        "tertiary-container": "#ef6719",
+                        "surface-bright": "#37393f",
+                        "surface-variant": "#33353a",
+                        "tertiary": "#ffb695",
+                        "error": "#ffb4ab"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "unit": "4px",
+                        "stack-gap": "16px",
+                        "container-padding": "20px",
+                        "touch-target": "44px",
+                        "grid-gutter": "12px"
+                    },
+                    fontFamily: {
+                        "label-lg": ["Inter"],
+                        "headline-xl-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "label-lg": ["13px", { lineHeight: "18px", letterSpacing: "0.02em", fontWeight: "600" }],
+                        "headline-xl-mobile": ["28px", { lineHeight: "36px", fontWeight: "700" }],
+                        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.04em", fontWeight: "500" }],
+                        "headline-xl": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+                        "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: theme('colors.glass-surface');
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-input {
+            background-color: theme('colors.input-glass');
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .glass-input:focus-within {
+            border-color: theme('colors.primary');
+        }
+
+        .floating-label {
+            transition: all 0.2s ease;
+            transform-origin: left top;
+        }
+
+        .glass-input:focus-within .floating-label,
+        .glass-input input:not(:placeholder-shown) + .floating-label {
+            transform: translateY(-24px) scale(0.85);
+            background-color: theme('colors.surface-container');
+            padding: 0 4px;
+            color: theme('colors.primary');
+            border-radius: 4px;
+        }
+
+        .primary-btn {
+            background: linear-gradient(180deg, theme('colors.primary-container') 0%, theme('colors.inverse-primary') 100%);
+            box-shadow: 0 4px 20px -4px theme('colors.primary-container');
+            transition: transform 0.15s ease, opacity 0.2s ease;
+        }
+        
+        .primary-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Fluid Gradient Animation */
+        @keyframes liquidFlow {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            mix-blend-mode: screen;
+            opacity: 0.6;
+            animation: liquidFlow 20s infinite linear;
+        }
+        
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: theme('colors.primary');
+            top: -100px;
+            left: -100px;
+            animation-duration: 25s;
+        }
+        
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: theme('colors.secondary');
+            bottom: 20%;
+            right: -50px;
+            animation-duration: 30s;
+            animation-direction: reverse;
+        }
+        
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: theme('colors.tertiary-container');
+            top: 40%;
+            left: 20%;
+            animation-duration: 22s;
+            opacity: 0.3;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen relative overflow-x-hidden font-body-md flex items-center justify-center">
+<!-- Animated Orbs Background -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+<div class="bg-orb orb-3"></div>
+</div>
+<!-- Main Container -->
+<main class="w-full max-w-[448px] px-container-padding py-[40px] relative z-10 flex flex-col min-h-screen md:min-h-0">
+<!-- Header -->
+<header class="flex flex-col items-center mb-[40px] mt-8 md:mt-0">
+<div class="w-24 h-24 rounded-[32px] glass-panel flex items-center justify-center mb-stack-gap shadow-lg shadow-primary/10 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-50"></div>
+<span class="material-symbols-outlined text-[48px] text-primary" style="font-variation-settings: 'FILL' 1;">
+                    devices
+                </span>
+</div>
+<h1 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-surface mb-2">Phone Desk</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant text-center">Bilgisayarınıza Bağlanın</p>
+</header>
+<!-- Login Form -->
+<form class="glass-panel rounded-2xl p-container-padding flex flex-col gap-stack-gap mb-[32px]">
+<!-- IP Input -->
+<div class="relative glass-input rounded-lg h-touch-target flex items-center px-4 mt-2">
+<span class="material-symbols-outlined text-on-surface-variant mr-3">router</span>
+<div class="relative flex-1 h-full flex items-center">
+<input autocomplete="off" class="w-full bg-transparent border-none outline-none text-on-surface font-body-md text-body-md h-full pt-1" id="ip-address" placeholder=" " type="text"/>
+<label class="floating-label absolute left-0 text-on-surface-variant font-body-md text-body-md pointer-events-none" for="ip-address">IP Adresi</label>
+</div>
+</div>
+<!-- Port Input -->
+<div class="relative glass-input rounded-lg h-touch-target flex items-center px-4 mt-2">
+<span class="material-symbols-outlined text-on-surface-variant mr-3">settings_ethernet</span>
+<div class="relative flex-1 h-full flex items-center">
+<input autocomplete="off" class="w-full bg-transparent border-none outline-none text-on-surface font-body-md text-body-md h-full pt-1" id="port" placeholder=" " type="text" value="8080"/>
+<label class="floating-label absolute left-0 text-on-surface-variant font-body-md text-body-md pointer-events-none" for="port">Port</label>
+</div>
+</div>
+<!-- Password Input -->
+<div class="relative glass-input rounded-lg h-touch-target flex items-center px-4 mt-2">
+<span class="material-symbols-outlined text-on-surface-variant mr-3">lock</span>
+<div class="relative flex-1 h-full flex items-center">
+<input class="w-full bg-transparent border-none outline-none text-on-surface font-body-md text-body-md h-full pt-1" id="password" placeholder=" " type="password"/>
+<label class="floating-label absolute left-0 text-on-surface-variant font-body-md text-body-md pointer-events-none" for="password">Güvenlik Şifresi</label>
+</div>
+</div>
+<!-- Connect Button -->
+<button class="primary-btn h-[56px] rounded-lg mt-2 flex items-center justify-center gap-2 group" type="button">
+<span class="font-label-lg text-label-lg text-white">Bağlan</span>
+<span class="material-symbols-outlined text-white group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</form>
+<!-- Recent Connections -->
+<section class="flex-1 flex flex-col">
+<h2 class="font-label-lg text-label-lg text-on-surface-variant mb-stack-gap px-2">Geçmiş Bağlantılar</h2>
+<div class="flex flex-col gap-unit">
+<!-- History Card 1 -->
+<div class="glass-panel rounded-xl p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">stadia_controller</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">Oyun Bilgisayarı</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">192.168.1.105:8080</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined group-hover:rotate-180 transition-transform duration-500">refresh</span>
+</button>
+</div>
+<!-- History Card 2 -->
+<div class="glass-panel rounded-xl p-4 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-white/5">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">laptop_mac</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">Ofis Laptop</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">10.0.0.52:9090</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined group-hover:rotate-180 transition-transform duration-500">refresh</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<script>
+        // Simple script to handle label floating on load if inputs have values
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                // Tailwind forms plugin sets default border colors, we override focus in css
+                // but need a tiny placeholder space so CSS :placeholder-shown works reliably
+                if(!input.placeholder) input.placeholder = " ";
+            });
+        });
+    </script>
+</body></html>

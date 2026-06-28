@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'deck_manager.dart';
 import 'theme.dart';
+import 'widgets/glass_container.dart';
 
 /// Desktop deck management panel - shows buttons in a grid with edit capabilities
 class DeckPanel extends StatefulWidget {
@@ -51,7 +52,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
     final profile = dm.activeProfile;
 
     return Container(
-      color: context.theme.surfaceLow,
+      color: AppTheme.surfaceLow,
       child: Column(
         children: [
           // Profile Selector Bar
@@ -71,7 +72,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+        border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
       ),
       child: Row(
         children: [
@@ -123,12 +124,12 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           gradient: isActive
-              ? LinearGradient(colors: [color, color.withOpacity(0.7)])
+              ? LinearGradient(colors: [color, color.withValues(alpha: 0.7)])
               : null,
-          color: isActive ? null : Colors.white.withOpacity(0.05),
+          color: isActive ? null : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive ? color.withOpacity(0.5) : Colors.white.withOpacity(0.1),
+            color: isActive ? color.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -161,7 +162,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.1), style: BorderStyle.solid),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1), style: BorderStyle.solid),
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
@@ -184,19 +185,19 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              context.theme.primaryContainer.withOpacity(0.3),
-              context.theme.accentPurple.withOpacity(0.3),
+              AppTheme.primaryContainer.withValues(alpha: 0.3),
+              AppTheme.accentPurple.withValues(alpha: 0.3),
             ],
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.theme.primaryContainer.withOpacity(0.3)),
+          border: Border.all(color: AppTheme.primaryContainer.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.add_circle_outline, size: 16, color: context.theme.primaryContainer),
+            Icon(Icons.add_circle_outline, size: 16, color: AppTheme.primaryContainer),
             const SizedBox(width: 6),
-            Text('Buton Ekle', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.theme.primaryContainer)),
+            Text('Buton Ekle', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primaryContainer)),
           ],
         ),
       ),
@@ -210,9 +211,9 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
@@ -291,17 +292,17 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
                 child: child,
               );
             },
-            child: Icon(Icons.dashboard_customize, size: 64, color: context.theme.primaryContainer),
+            child: Icon(Icons.dashboard_customize, size: 64, color: AppTheme.primaryContainer),
           ),
           const SizedBox(height: 16),
           Text(
             'Henüz buton eklenmedi',
-            style: TextStyle(color: context.theme.outline, fontSize: 14),
+            style: TextStyle(color: AppTheme.outline, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Text(
             '"Buton Ekle" ile başlayın',
-            style: TextStyle(color: context.theme.outline.withOpacity(0.5), fontSize: 12),
+            style: TextStyle(color: AppTheme.outline.withValues(alpha: 0.5), fontSize: 12),
           ),
         ],
       ),
@@ -346,33 +347,17 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
       onSecondaryTapDown: (details) {
         _showButtonContextMenu(context, details.globalPosition, button);
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              darkColor,
-              color.withOpacity(0.15),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+      child: GlassContainer(
+        blur: 20,
+        glassColor: darkColor.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            splashColor: color.withOpacity(0.3),
-            highlightColor: color.withOpacity(0.1),
+            splashColor: color.withValues(alpha: 0.3),
+            highlightColor: color.withValues(alpha: 0.1),
             onTap: () async {
               final success = await dm.executeAction(button);
               if (!success && mounted) {
@@ -390,7 +375,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -420,7 +405,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
                   _getActionLabel(button.actionType),
                   style: TextStyle(
                     fontSize: 9,
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                   ),
                 ),
               ],
@@ -665,7 +650,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
                     const SizedBox(height: 4),
                     Text(
                       _getActionHint(selectedActionType),
-                      style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 11),
                     ),
                     const SizedBox(height: 8),
                     if (selectedActionType == 'media')
@@ -719,10 +704,10 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
                               final isFocused = hotkeyFocusNode.hasFocus;
                               return Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: isFocused ? Colors.blueAccent : Colors.white.withOpacity(0.1)),
-                                  boxShadow: isFocused ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.2), blurRadius: 8)] : null,
+                                  border: Border.all(color: isFocused ? Colors.blueAccent : Colors.white.withValues(alpha: 0.1)),
+                                  boxShadow: isFocused ? [BoxShadow(color: Colors.blueAccent.withValues(alpha: 0.2), blurRadius: 8)] : null,
                                 ),
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 child: Row(
@@ -849,9 +834,9 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
   Widget _buildTextField(TextEditingController controller, String hint, IconData icon, {Widget? trailing, FocusNode? focusNode, bool readOnly = false, VoidCallback? onTap}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -892,10 +877,10 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.03),
+              color: isSelected ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isSelected ? Colors.white.withOpacity(0.3) : Colors.white.withOpacity(0.08),
+                color: isSelected ? Colors.white.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.08),
               ),
             ),
             child: Row(
@@ -936,9 +921,9 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.pinkAccent.withOpacity(0.2) : Colors.white.withOpacity(0.03),
+              color: isSelected ? Colors.pinkAccent.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isSelected ? Colors.pinkAccent.withOpacity(0.5) : Colors.white.withOpacity(0.08)),
+              border: Border.all(color: isSelected ? Colors.pinkAccent.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.08)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -970,9 +955,9 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.cyan.withOpacity(0.2) : Colors.white.withOpacity(0.03),
+              color: isSelected ? Colors.cyan.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isSelected ? Colors.cyan.withOpacity(0.5) : Colors.white.withOpacity(0.08)),
+              border: Border.all(color: isSelected ? Colors.cyan.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.08)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1006,10 +991,10 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
             onTap: () => onChanged(icon),
             child: Container(
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.03),
+                color: isSelected ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isSelected ? Colors.white.withOpacity(0.4) : Colors.transparent,
+                  color: isSelected ? Colors.white.withValues(alpha: 0.4) : Colors.transparent,
                 ),
               ),
               child: Icon(
@@ -1030,7 +1015,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: availableColors.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
+        separatorBuilder: (context, _) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
           final color = availableColors[index];
           final isSelected = color == selected;
@@ -1049,7 +1034,7 @@ class _DeckPanelState extends State<DeckPanel> with SingleTickerProviderStateMix
                   width: isSelected ? 2.5 : 0,
                 ),
                 boxShadow: isSelected
-                    ? [BoxShadow(color: c.withOpacity(0.5), blurRadius: 8)]
+                    ? [BoxShadow(color: c.withValues(alpha: 0.5), blurRadius: 8)]
                     : null,
               ),
               child: isSelected

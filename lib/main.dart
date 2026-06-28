@@ -5,6 +5,8 @@ import 'package:launch_at_startup/launch_at_startup.dart';
 import 'dart:io';
 
 import 'phone_link_app.dart';
+import 'theme.dart';
+import 'widgets/app_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,9 +47,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Phone Link',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
-      ),
+      theme: AppTheme.themeData,
       home: const SplashToTrayApp(),
     );
   }
@@ -138,49 +138,51 @@ class _SplashToTrayAppState extends State<SplashToTrayApp>
   Widget build(BuildContext context) {
     if (_showSplash) {
       return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00F0FF), Color(0xFFB517FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+        body: AppBackground(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00F0FF), Color(0xFFB517FF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  borderRadius: BorderRadius.circular(24),
+                  child: const Icon(
+                    Icons.phonelink_ring_rounded,
+                    size: 50,
+                    color: Colors.white,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.phonelink_ring_rounded,
-                  size: 50,
-                  color: Colors.white,
+                const SizedBox(height: 32),
+                const Text(
+                  'Phone Desk',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Phone Desk',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                const SizedBox(height: 8),
+                const Text(
+                  'Sistem Tepsisinde Başlatılıyor...',
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Sistem Tepsisinde Başlatılıyor...',
-                style: TextStyle(fontSize: 16, color: Colors.white70),
-              ),
-              const SizedBox(height: 32),
-              const CircularProgressIndicator(color: Color(0xFF00F0FF)),
-            ],
+                const SizedBox(height: 32),
+                const CircularProgressIndicator(color: Color(0xFF00F0FF)),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return const Scaffold(body: PhoneLinkApp());
+    return const Scaffold(body: AppBackground(child: PhoneLinkApp()));
   }
 }
