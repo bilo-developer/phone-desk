@@ -261,14 +261,14 @@ String getWebHtmlContent() {
             <h2 class="text-xl font-bold text-white mb-2">Phone Desk Mobil</h2>
             <p class="text-sm text-onSurfaceVariant mb-6">Daha iyi bir deneyim, daha yüksek performans ve tüm özellikler için mobil uygulamamızı indirin.</p>
             
-            <a href="#" class="glass-button w-full py-4 rounded-xl flex items-center justify-center mb-4 bg-primary/10 border-primary/20">
+            <a href="https://github.com/logicblend/phone-desk/releases/latest/download/app-release.apk" class="glass-button w-full py-4 rounded-xl flex items-center justify-center mb-4 bg-primary/10 border-primary/20">
                 <span class="material-icons-round text-primary mr-3 text-2xl">android</span>
                 <span class="text-white font-semibold">Android için İndir (APK)</span>
             </a>
             
-            <a href="#" class="glass-button w-full py-4 rounded-xl flex items-center justify-center bg-white/5 border-white/10">
+            <a href="https://github.com/logicblend/phone-desk/releases/latest/download/PhoneDeskClient.ipa" class="glass-button w-full py-4 rounded-xl flex items-center justify-center bg-white/5 border-white/10">
                 <span class="material-icons-round text-onSurface mr-3 text-2xl">apple</span>
-                <span class="text-white font-semibold">iOS için İndir</span>
+                <span class="text-white font-semibold">iOS için İndir (IPA)</span>
             </a>
         </div>
     </div>

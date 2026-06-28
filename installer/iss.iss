@@ -4,8 +4,8 @@
 
 #define MyAppName "Phone Desk"
 #define MyAppVersion "1.0.0"
-#define MyAppPublisher "Bilo Developer"
-#define MyAppURL "https://github.com/bilo-developer/phone-desk"
+#define MyAppPublisher "LogicBlend"
+#define MyAppURL "https://github.com/logicblend/phone-desk"
 #define MyAppExeName "phone_link_app.exe"
 #define MyAppAssocName MyAppName + " File"
 #define MyAppAssocExt ".myp"

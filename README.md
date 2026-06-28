@@ -1,53 +1,68 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/bilo-developer/phone-desk/main/assets/app_icon.ico" width="100" />
+  <img src="https://raw.githubusercontent.com/logicblend/phone-desk/main/assets/app_icon.ico" width="100" />
   <h1>Phone Desk</h1>
   <p><strong>Bilgisayarınızı Telefonunuzdan Canlı ve Kesintisiz Yönetin!</strong></p>
 </div>
 
 <br>
 
-**Phone Desk**, bilgisayarınızı akıllı telefonunuz üzerinden (yerel ağ bağlantısı ile) tam kapsamlı olarak kontrol etmenizi sağlayan güçlü ve estetik bir araçtır. Yeni nesil **"Liquid Glass" (Cam Tasarımı)** arayüzü ile iOS ve Android cihazlarda muhteşem bir deneyim sunar. 
+**Phone Desk**, bilgisayarınızı akıllı telefonunuz üzerinden (yerel ağ bağlantısı ile) tam kapsamlı olarak kontrol etmenizi sağlayan güçlü ve estetik bir araçtır. Yeni nesil **"Liquid Glass" (Cam Tasarımı)** arayüzü ile iOS, Android ve Web Tarayıcılarında muhteşem bir deneyim sunar. 
+
+---
+
+## 📸 Ekran Görüntüleri
+
+| Bağlantı Ekranı | Akıllı Touchpad |
+| :---: | :---: |
+| <img src="screenshots/login.png" width="300" /> | <img src="screenshots/touchpad.png" width="300" /> |
+| **Gelişmiş Dosya Yöneticisi** | **Sistem & Güç Kontrolü** |
+| <img src="screenshots/files.png" width="300" /> | <img src="screenshots/system.png" width="300" /> |
 
 ---
 
 ## 🌟 Öne Çıkan Özellikler
 
-### 📱 Modern "Liquid Glass" Arayüz
-Uygulama baştan aşağı yenilenerek şeffaf cam efektleri, neon parlamalar ve modern animasyonlarla donatıldı. Pürüzsüz ve karanlık temalı üst düzey bir tasarım deneyimi yaşatır.
-
-### 🎮 Çoklu Monitör ve Canlı Ekran Kontrolü
-Bilgisayar ekranınızı **gerçek zamanlı (MJPEG Stream)** mimarisiyle telefonunuzdan izleyin.
-- **Çoklu Ekran Desteği:** Birden fazla monitörünüz varsa, aralarında anında geçiş yapıp dilediğiniz ekranı izleyebilirsiniz.
-- **Dinamik Çözünürlük ve FPS:** Bağlantı kalitenize göre çözünürlüğü (1080p, 720p, 480p) ve FPS'i ayarlayabilirsiniz.
-- **Tam Ekran (Fullscreen):** Telefonu yan çevirerek bilgisayarınızı tam ekranda yönetin.
-
-### 🖱️ Akıllı Touchpad
-Telefonunuzun ekranını bir dizüstü bilgisayar touchpad'i gibi kullanın. Yeni tasarımıyla çok daha isabetli ve akıcı kontrol sağlar. Sağ tık, sol tık ve metin gönderme işlemlerini tek dokunuşla halledin.
-
-### 📂 Gelişmiş Dosya Yöneticisi (Önizlemeli)
-Bilgisayarınızın tüm disklerinde (C:\, D:\) telefonunuz üzerinden özgürce dolaşın.
-- **Resim Önizlemeleri:** Resim (.jpg, .png) dosyalarını ikon yerine küçük kapak fotoğraflarıyla (thumbnail) görün.
-- **Tam Ekran Galeri:** Resimlere tıklayarak telefonunuzda tam ekran yakınlaştırmalı (zoom) olarak görüntüleyin.
-- **Akıllı İndirme:** Dilediğiniz dosyayı tek tuşla anında telefonunuza indirin.
-
-### 🎛️ Profil Destekli Akıllı Stream Deck
-Telefonunuzu profesyonel bir kontrol paneline (Stream Deck) dönüştürün.
-- **Profiller (OBS, Zoom, Netflix vb.):** Alt taraftan farklı profiller arasında geçiş yapabilirsiniz.
-- **Akıllı İkon Sistemi:** Eklediğiniz butonların ismine göre (örn: "Mikrofonu Sustur", "YouTube Aç") uygun profesyonel ikonlar sistem tarafından otomatik atanır.
-
-### 📊 Detaylı Sistem Monitörü
-Bilgisayarınızın anlık CPU, RAM ve Disk kullanımlarını detaylı dairesel grafiklerle takip edin. "PC'yi Kapat", "Yeniden Başlat", "Kilitle" gibi işlemleri şık bir geçiş menüsünden yönetin.
-
-### 🔒 Yerel ve Güvenli
-Uygulama arka planda (Sistem tepsisinde) çalışır ve açılırken size özel 6 haneli **Güvenlik Şifresi** üretir. Bağlantı tamamen yerel ağ (Wi-Fi) üzerinden kurulduğu için verileriniz güvendedir.
+- **📱 Modern "Liquid Glass" Arayüz:** Pürüzsüz ve karanlık temalı üst düzey bir tasarım deneyimi.
+- **🎮 Canlı Ekran Kontrolü:** Çoklu monitör desteği ve ayarlanabilir çözünürlük/FPS ile PC ekranını telefona yansıtma.
+- **🖱️ Çift Dokunuşlu Touchpad:** Sağ tık, sol tık ve **çift dokunup sürükleme (drag)** destekli hassas fare kontrolü.
+- **📂 Dosya Yöneticisi:** PC dosyalarında gezinme, resim önizlemeleri ve telefona tek tuşla dosya indirme.
+- **🎛️ Profil Destekli Stream Deck:** Uygulamalara özel kontrol panelleri ve kısayollar (OBS, Zoom, Medya vb.).
+- **📊 Sistem Monitörü:** CPU, RAM kullanımları ve anında PC'yi kapatma, kilitleme seçenekleri.
 
 ---
 
 ## 🚀 Kurulum ve Başlangıç
 
-1. Bilgisayarınızdan **PhoneLink_Installer.exe** dosyasını (Desktop uygulamasını) kurup başlatın.
-2. Telefonunuza uygulamanın Mobil Sürümünü kurun (Yakında eklenecek).
-3. Bilgisayarda üretilen adresi (veya IP'yi) ve Güvenlik Şifresini telefonunuza girerek **Bağlan** tuşuna basın.
-4. Tadını çıkarın!
+Phone Desk, hem bilgisayarınızda (Sunucu) hem de telefonunuzda (İstemci) çalışacak iki parçadan oluşur.
 
-*(Not: Bilgisayarınız ve telefonunuzun aynı Wi-Fi (Yerel Ağ) üzerinde bağlı olması gerekmektedir.)*
+### 1. Adım: Bilgisayar (Windows) Kurulumu
+1. Sağ taraftaki **Releases** bölümünden (veya yukarıdaki Web arayüzü bağlantılarından) **`PhoneLink_Installer.exe`** dosyasını indirin.
+2. Kurulumu tamamlayıp uygulamayı başlatın.
+3. Uygulama size bir **Yerel IP Adresi** (Örn: `http://192.168.1.50:8080`) ve 6 haneli bir **Güvenlik Şifresi** verecektir.
+
+### 2. Adım: Telefon (İstemci) Kurulumu
+
+Telefonunuzun tarayıcısından doğrudan IP adresini girerek Web arayüzünü kullanabileceğiniz gibi, çok daha yüksek performans için yerel uygulamalarımızı kurabilirsiniz:
+
+#### 🟢 Android (APK) Kurulumu:
+1. **Releases** bölümünden **`app-release.apk`** dosyasını telefonunuza indirin.
+2. Dosyayı açın ve "Bilinmeyen Kaynaklar" uyarısı verirse ayarlardan izin vererek kurulumu tamamlayın.
+3. Uygulamayı açıp bilgisayarınızdaki IP adresi ve Şifreyi girerek bağlanın.
+
+#### 🍎 iOS (IPA) AltStore ile Kurulumu:
+Apple'ın kısıtlamaları nedeniyle uygulama henüz App Store'da değildir. Ancak `PhoneDeskClient.ipa` dosyasını ücretsiz olarak **AltStore** ile kurabilirsiniz:
+
+1. **Hazırlık:** Bilgisayarınıza [AltServer](https://altstore.io/) uygulamasını indirin ve kurun. Telefonunuzda AltStore uygulamasının yüklü olduğundan emin olun.
+2. **IPA'yı İndirin:** iPhone'unuzdaki Safari tarayıcısından bu GitHub sayfasının **Releases** bölümüne girip **`PhoneDeskClient.ipa`** dosyasını indirin (Dosyalar uygulamasına kaydedilir).
+3. **AltStore'a Yükleme:**
+   - iPhone'unuzdan **AltStore** uygulamasını açın.
+   - Alt sekmeden **My Apps** (Uygulamalarım) bölümüne geçin.
+   - Sol üst köşedeki **`+`** (Artı) ikonuna tıklayın.
+   - Dosyalar uygulamasından indirdiğiniz `PhoneDeskClient.ipa` dosyasını seçin.
+4. AltStore uygulamayı imzalayacak ve saniyeler içinde ana ekranınıza ekleyecektir. İşlem bitince uygulamayı açıp IP ve şifrenizle bilgisayarınıza bağlanabilirsiniz!
+
+> [!TIP]
+> AltStore ile yüklenen uygulamaların süresi 7 gündür. Bilgisayarınızla aynı Wi-Fi ağındayken AltStore arka planda otomatik olarak bu süreyi yeniler.
+
+---
+*(Not: Bilgisayarınız ve telefonunuzun aynı Wi-Fi ağına bağlı olması gerekmektedir.)*
